@@ -1,5 +1,5 @@
 // ============================================================
-// SALAS — responsável: Murilo
+// SALAS - Admin-salas — responsável: Murilo
 // ============================================================
 // O que você precisa aprender aqui: como escrever, ler, atualizar
 // e remover dados no Firebase Realtime Database (CRUD básico).

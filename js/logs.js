@@ -1,5 +1,5 @@
 // ============================================================
-// LOGS DE ACESSO + LISTENER EM TEMPO REAL — responsável: Isaque
+// LOGS DE ACESSO / LISTENER EM TEMPO REAL -- Aluno — responsável: Isaque
 // ============================================================
 // O que você precisa aprender aqui: como "escutar" uma mudança no
 // Firebase em tempo real (onValue) e reagir a ela na tela, sem

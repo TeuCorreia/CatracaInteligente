@@ -1,5 +1,5 @@
 // ============================================================
-// TURMAS / ALOCAÇÃO — responsável: Davi
+// TURMAS / ALOCAÇÃO -- Professor — responsável: Davi
 // ============================================================
 // O que você precisa aprender aqui: como ligar um formulário HTML
 // a uma escrita no Firebase, e como ler uma lista já existente
