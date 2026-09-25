@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cadastro de Salas</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Cadastro de Salas</h1>
+    <nav><a href="index.html">← Voltar</a></nav>
+  </header>
+
+  <main>
+    <div class="todo">
+      Responsável: <strong>Murilo</strong>. Veja os TODOs em <code>js/salas.js</code>.
+      Essa página já está funcional (criar + listar + remover); falta você implementar
+      a edição (update) e validar os campos do formulário.
+    </div>
+
+    <div class="card">
+      <h2>Nova sala</h2>
+      <form id="form-sala">
+        <label>Número da sala</label>
+        <input type="text" id="numero" required />
+
+        <label>Módulo</label>
+        <input type="text" id="modulo" required />
+
+        <label>Andar</label>
+        <input type="number" id="andar" required />
+
+        <label>Capacidade</label>
+        <input type="number" id="capacidade" required />
+
+        <button type="submit">Cadastrar sala</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Salas cadastradas</h2>
+      <div id="lista-salas">Carregando...</div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { criarSala, escutarSalas, removerSala } from "./js/salas.js";
+
+    document.getElementById("form-sala").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await criarSala({
+        numero: document.getElementById("numero").value,
+        modulo: document.getElementById("modulo").value,
+        andar: document.getElementById("andar").value,
+        capacidade: document.getElementById("capacidade").value,
+      });
+      e.target.reset();
+    });
+
+    escutarSalas((salas) => {
+      const container = document.getElementById("lista-salas");
+      if (salas.length === 0) {
+        container.innerHTML = "<p>Nenhuma sala cadastrada ainda.</p>";
+        return;
+      }
+      container.innerHTML = salas
+        .map(
+          (s) => `
+        <div class="lista-item">
+          <span>Sala ${s.numero} — Módulo ${s.modulo}, ${s.andar}º andar (cap. ${s.capacidade})</span>
+          <button data-id="${s.id}" class="btn-remover">Remover</button>
+        </div>`
+        )
+        .join("");
+
+      // TODO (Murilo): trocar esse onclick por um botão de "editar" também
+      container.querySelectorAll(".btn-remover").forEach((btn) => {
+        btn.addEventListener("click", () => removerSala(btn.dataset.id));
+      });
+    });
+  </script>
+</body>
+</html>

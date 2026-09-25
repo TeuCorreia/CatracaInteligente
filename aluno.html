@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Acesso do Aluno</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Acesso do Aluno (Catraca)</h1>
+    <nav><a href="index.html">← Voltar</a></nav>
+  </header>
+
+  <main>
+    <div class="todo">
+      Responsável: <strong>Isaque</strong>. Veja os TODOs em <code>js/logs.js</code>.
+      Por enquanto, a matrícula é digitada manualmente pra simular o
+      reconhecimento facial (que ainda é responsabilidade do Anthony).
+      Foque em entender o listener em tempo real — é a parte central do
+      requisito de "atualização em tempo real" do projeto.
+    </div>
+
+    <div class="card">
+      <h2>Simular reconhecimento</h2>
+      <label>Matrícula do aluno</label>
+      <input type="text" id="matricula" placeholder="Ex: 2024001" />
+      <button id="btn-verificar">Verificar acesso</button>
+    </div>
+
+    <div class="card" id="resultado" style="display:none;">
+      <h2>Resultado</h2>
+      <p id="texto-resultado"></p>
+    </div>
+  </main>
+
+  <script type="module">
+    import { verificarAcesso } from "./js/auth.js";
+
+    document.getElementById("btn-verificar").addEventListener("click", async () => {
+      const matricula = document.getElementById("matricula").value.trim();
+      if (!matricula) return;
+
+      const resultadoDiv = document.getElementById("resultado");
+      const texto = document.getElementById("texto-resultado");
+      resultadoDiv.style.display = "block";
+      texto.textContent = "Verificando...";
+
+      const resposta = await verificarAcesso(matricula);
+
+      if (resposta.autorizado) {
+        texto.innerHTML = `<span class="status-ok">Acesso liberado.</span><br/>
+          TODO (Isaque + Emerson): mostrar aqui disciplina, sala, módulo e andar
+          assim que a busca de turma estiver implementada.`;
+      } else {
+        texto.innerHTML = `<span class="status-negado">Acesso negado.</span> (${resposta.motivo})`;
+      }
+    });
+
+    // TODO (Isaque): usar escutarTurma() de js/logs.js aqui para atualizar
+    // a tela automaticamente se o professor mudar a sala DEPOIS que o
+    // aluno já tiver passado (esse é o requisito de "tempo real").
+  </script>
+</body>
+</html>

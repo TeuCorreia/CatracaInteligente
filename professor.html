@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Área do Professor</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Área do Professor</h1>
+    <nav><a href="index.html">← Voltar</a></nav>
+  </header>
+
+  <main>
+    <div class="todo">
+      Responsável: <strong>Davi</strong>. Veja os TODOs em <code>js/turmas.js</code>.
+      Esse formulário já lê as salas do Murilo e salva a alocação no Firebase —
+      falta você trocar "Disciplina" e "Professor" de texto livre para selects
+      de verdade quando essas coleções existirem.
+    </div>
+
+    <div class="card">
+      <h2>Alocar turma para hoje</h2>
+      <form id="form-turma">
+        <label>Disciplina</label>
+        <input type="text" id="disciplina" placeholder="Ex: Arquitetura de Computadores" required />
+
+        <label>Professor</label>
+        <input type="text" id="professorId" placeholder="Seu nome (por enquanto)" required />
+
+        <label>Sala</label>
+        <select id="salaId" required>
+          <option value="">Carregando salas...</option>
+        </select>
+
+        <label>Data</label>
+        <input type="date" id="data" required />
+
+        <label>Horário</label>
+        <input type="time" id="horario" required />
+
+        <button type="submit">Confirmar alocação</button>
+      </form>
+    </div>
+  </main>
+
+  <script type="module">
+    import { criarTurma, escutarSalasParaSelect } from "./js/turmas.js";
+
+    escutarSalasParaSelect((salas) => {
+      const select = document.getElementById("salaId");
+      if (salas.length === 0) {
+        select.innerHTML = "<option value=''>Nenhuma sala cadastrada ainda</option>";
+        return;
+      }
+      select.innerHTML = salas
+        .map((s) => `<option value="${s.id}">Sala ${s.numero} — Módulo ${s.modulo}, ${s.andar}º andar</option>`)
+        .join("");
+    });
+
+    document.getElementById("form-turma").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await criarTurma({
+        disciplina: document.getElementById("disciplina").value,
+        professorId: document.getElementById("professorId").value,
+        salaId: document.getElementById("salaId").value,
+        data: document.getElementById("data").value,
+        horario: document.getElementById("horario").value,
+      });
+      alert("Turma alocada com sucesso!");
+      e.target.reset();
+    });
+  </script>
+</body>
+</html>

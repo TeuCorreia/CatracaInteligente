@@ -1,0 +1,81 @@
+/* ============================================================
+   ESTILO BASE — compartilhado por todas as páginas
+   Mantém tudo visualmente parecido sem precisar de framework
+   ============================================================ */
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: system-ui, Arial, sans-serif;
+  background: #f4f6f8;
+  color: #1c1c1c;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  background: #14213d;
+  color: #fff;
+  padding: 1rem 1.5rem;
+}
+
+header h1 { margin: 0; font-size: 1.2rem; }
+header nav a {
+  color: #cfd8ea;
+  text-decoration: none;
+  margin-right: 1rem;
+  font-size: 0.9rem;
+}
+header nav a:hover { color: #fff; }
+
+main {
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  margin-bottom: 1.5rem;
+}
+
+label { display: block; margin-top: 0.8rem; font-size: 0.9rem; font-weight: 600; }
+input, select, button {
+  width: 100%;
+  padding: 0.6rem;
+  margin-top: 0.3rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+button {
+  background: #14213d;
+  color: #fff;
+  border: none;
+  margin-top: 1.2rem;
+  cursor: pointer;
+}
+button:hover { background: #1f3565; }
+
+.lista-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding: 0.5rem 0;
+}
+
+.status-ok { color: #1a7f37; font-weight: 700; }
+.status-negado { color: #c0392b; font-weight: 700; }
+
+.todo {
+  background: #fff3cd;
+  border-left: 4px solid #e6a700;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.85rem;
+  margin: 1rem 0;
+}
