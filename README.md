@@ -5,25 +5,39 @@ a trabalhar em cima desta estrutura, sem precisar decidir "como organizar as
 coisas" — isso já está feito. Foco de vocês agora: preencher os `TODO`
 espalhados pelo código.
 
-## Como rodar o projeto localmente
+## Como executar o projeto
 
-Como o projeto usa módulos JavaScript (`type="module"`), não dá para abrir o
-`index.html` direto no navegador (vai dar erro de CORS). Use um servidor local simples:
+Para executar o projeto localmente, siga os passos abaixo.
 
-- **VS Code**: instale a extensão "Live Server" e clique em "Go Live"
-- **ou**, no terminal, dentro da pasta do projeto: `python3 -m http.server 8000`
-  e acesse `http://localhost:8000`
+### 1. Instale o Live Server
 
-## Primeiro passo obrigatório: configurar o Firebase
+No VS Code, abra a aba de extensões (`Ctrl + Shift + X`) e procure por:
 
-1. Um de vocês cria o projeto em https://console.firebase.google.com
-2. Ativa o **Realtime Database** (modo de teste por enquanto)
-3. Registra um app Web e pega o objeto de configuração
-4. Cola esse objeto em `js/firebase-config.js` (tem instruções detalhadas dentro do arquivo)
-5. Compartilha as credenciais com o resto do grupo (mesmo projeto Firebase pra todos)
+**Live Server**
 
-**Sem esse passo, nada no sistema funciona** — façam isso primeiro, antes de
-qualquer um começar sua parte.
+Instale a extensão para conseguir executar as páginas HTML do projeto localmente.
+
+### 2. Instale o Node.js
+
+Caso ainda não tenha o Node.js instalado no computador, baixe e instale pelo site oficial:
+
+https://nodejs.org/
+
+Após a instalação, abra o terminal e verifique:
+
+##bash
+node -v
+npm -v
+
+### 3. Instale as dependências do projeto
+
+Abra o terminal na pasta do projeto e execute: (`npm install`)
+
+Depois, instale o Firebase: (`npm install firebase`)
+
+### 4. Execute o projeto
+
+Abra o arquivo: (`index.html`) e rode o Live Server
 
 ## Estrutura de pastas
 
