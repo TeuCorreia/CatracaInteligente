@@ -14,26 +14,21 @@
   </header>
 
   <main>
-    <div class="todo">
-      Responsável: <strong>Murilo</strong>. Veja os TODOs em <code>js/salas.js</code>.
-      Essa página já está funcional (criar + listar + remover); falta você implementar
-      a edição (update) e validar os campos do formulário.
-    </div>
 
     <div class="card">
       <h2>Nova sala</h2>
       <form id="form-sala">
         <label>Número da sala</label>
-        <input type="text" id="numero" required />
+        <input type="text" id="numero" required pattern="[0-9]+" inputmode="numeric" title="Digite apenas números."/>
 
         <label>Módulo</label>
-        <input type="text" id="modulo" required />
+        <input type="text" id="modulo" required/>
 
         <label>Andar</label>
-        <input type="number" id="andar" required />
+        <input type="number" id="andar" required pattern="[0-9]+" inputmode="numeric" title="Digite apenas números."/>
 
         <label>Capacidade</label>
-        <input type="number" id="capacidade" required />
+        <input type="number" id="capacidade" required pattern="[0-9]+" inputmode="numeric" title="Digte apenas números."/>
 
         <button type="submit">Cadastrar sala</button>
       </form>
@@ -46,7 +41,8 @@
   </main>
 
   <script type="module">
-    import { criarSala, escutarSalas, removerSala } from "./js/salas.js";
+    import { criarSala, escutarSalas, removerSala, atualizarSala } from "./js/salas.js";
+    let salaEmEdicao = null;
 
     document.getElementById("form-sala").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -70,16 +66,87 @@
           (s) => `
         <div class="lista-item">
           <span>Sala ${s.numero} — Módulo ${s.modulo}, ${s.andar}º andar (cap. ${s.capacidade})</span>
+          <button data-id="${s.id}" class="btn-editar">Editar</button>
           <button data-id="${s.id}" class="btn-remover">Remover</button>
         </div>`
         )
         .join("");
+        //botão editar
+        container.querySelectorAll(".btn-editar").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const sala = salas.find((s) => s.id === btn.dataset.id);
 
-      // TODO (Murilo): trocar esse onclick por um botão de "editar" também
+            if (!sala) return;
+
+            salaEmEdicao = sala.id;
+
+            document.getElementById("form-sala")
+              .closest(".card")
+              .querySelector("h2")
+              .textContent = "Editando Sala";
+
+            document.getElementById("numero").value = sala.numero;
+            document.getElementById("modulo").value = sala.modulo;
+            document.getElementById("andar").value = sala.andar;
+            document.getElementById("capacidade").value = sala.capacidade;
+
+            document.querySelector('#form-sala button[type="submit"]').textContent =
+              "Salvar alterações";
+
+            document.getElementById("numero").focus();
+          });
+        });
+
+      //botão remover
       container.querySelectorAll(".btn-remover").forEach((btn) => {
         btn.addEventListener("click", () => removerSala(btn.dataset.id));
       });
     });
+
+    document.getElementById("form-sala").addEventListener(
+      "submit",
+      async (e) => {
+      // Fora da edição, mantém o cadastro original.
+      if (salaEmEdicao === null) return;
+
+      e.preventDefault();
+      e.stopImmediatePropagation();
+
+      const formulario = e.target;
+      const botao = formulario.querySelector('button[type="submit"]');
+
+      if (botao.disabled) return;
+
+      const dadosNovos = {
+        numero: document.getElementById("numero").value.trim(),
+        modulo: document.getElementById("modulo").value.trim(),
+        andar: Number(document.getElementById("andar").value),
+        capacidade: Number(document.getElementById("capacidade").value),
+      };
+
+      botao.disabled = true;
+
+      try {
+        await atualizarSala(salaEmEdicao, dadosNovos);
+
+        document.getElementById("form-sala")
+          .closest(".card")
+          .querySelector("h2")
+          .textContent = "Nova sala";
+
+        salaEmEdicao = null;
+        formulario.reset();
+        botao.textContent = "Cadastrar sala";
+
+        alert("Sala atualizada!");
+      } catch (erro) {
+        alert(erro.message);
+      } finally {
+        botao.disabled = false;
+      }
+    },
+    { capture: true }
+  );
   </script>
 </body>
 </html>

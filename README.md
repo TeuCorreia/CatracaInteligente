@@ -80,9 +80,3 @@ Murilo (salas) → Davi (turmas usam salas) → Emerson (auth usa turmas) → Is
 Ou seja: dá pra todo mundo trabalhar em paralelo desde já, porque cada parte
 já tem uma versão "rascunho" funcionando (dados fake/manuais) — vocês vão
 substituindo aos poucos pela versão de verdade.
-
-## Sugestão de fluxo de trabalho em grupo
-
-- Um branch por pessoa (ex: `murilo-salas`, `davi-turmas`) e dar merge na `main` conforme for testando
-- Combinar um horário fixo por semana pra todo mundo testar o sistema junto e ver se as partes estão conversando direito
-- Se travar em algo do Firebase, chamar o Mateus ou o Emerson antes de ficar muito tempo travado sozinho
