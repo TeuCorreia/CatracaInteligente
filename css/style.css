@@ -79,3 +79,7 @@ button:hover { background: #1f3565; }
   font-size: 0.85rem;
   margin: 1rem 0;
 }
+
+.btn-editar {
+  margin-right: 8px;
+}

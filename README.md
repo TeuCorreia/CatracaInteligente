@@ -1,88 +1,127 @@
-# Catraca Inteligente — Base do Projeto (Parte 1)
+# Changelog
 
-Este é o esqueleto inicial do sistema. A ideia é que cada integrante já comece
-a trabalhar em cima desta estrutura, sem precisar decidir "como organizar as
-coisas" — isso já está feito. Foco de vocês agora: preencher os `TODO`
-espalhados pelo código.
+1. Foi adicionado o botão **Editar** no arquivo `admin-sala.html`:
 
-## Como executar o projeto
+        `<div class="lista-item">
+          <span>Sala ${s.numero} — Módulo ${s.modulo}, ${s.andar}º andar (cap. ${s.capacidade})</span>
+          <button data-id="${s.id}" class="btn-editar">Editar</button>  // foi adcionado essa linha de código
+          <button data-id="${s.id}" class="btn-remover">Remover</button>
+        </div>
 
-Para executar o projeto localmente, siga os passos abaixo.
+        // botão editar junto com a mudança da box de "Nova Sala" para "Editando Sala.
+        container.querySelectorAll(".btn-editar").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const sala = salas.find((s) => s.id === btn.dataset.id);
 
-### 1. Instale o Live Server
+            if (!sala) return;
 
-No VS Code, abra a aba de extensões (`Ctrl + Shift + X`) e procure por:
+            salaEmEdicao = sala.id;
 
-**Live Server**
+            document.getElementById("form-sala")
+              .closest(".card")
+              .querySelector("h2")
+              .textContent = "Editando Sala";
 
-Instale a extensão para conseguir executar as páginas HTML do projeto localmente.
+            document.getElementById("numero").value = sala.numero;
+            document.getElementById("modulo").value = sala.modulo;
+            document.getElementById("andar").value = sala.andar;
+            document.getElementById("capacidade").value = sala.capacidade;
 
-### 2. Instale o Node.js
+            document.querySelector('#form-sala button[type="submit"]').textContent =
+              "Salvar alterações";
 
-Caso ainda não tenha o Node.js instalado no computador, baixe e instale pelo site oficial:
+            document.getElementById("numero").focus();
+          });
+        });
 
-https://nodejs.org/
+        // Fora da edição, mantém o cadastro original..
+        if (salaEmEdicao === null) return;
 
-Após a instalação, abra o terminal e verifique:
+        e.preventDefault();
+        e.stopImmediatePropagation();
 
-##bash
-node -v
-npm -v
+        const formulario = e.target;
+        const botao = formulario.querySelector('button[type="submit"]');
 
-### 3. Instale as dependências do projeto
+        if (botao.disabled) return;
 
-Abra o terminal na pasta do projeto e execute: (`npm install`)
+        const dadosNovos = {
+            numero: document.getElementById("numero").value.trim(),
+            modulo: document.getElementById("modulo").value.trim(),
+            andar: Number(document.getElementById("andar").value),
+            capacidade: Number(document.getElementById("capacidade").value),
+        };
 
-Depois, instale o Firebase: (`npm install firebase`)
+        botao.disabled = true;
 
-### 4. Execute o projeto
+        // Muda o título da box de "Editando Sala" para "Nova Sala" como estava anteriormente.
+        try {
+            await atualizarSala(salaEmEdicao, dadosNovos);
 
-Abra o arquivo: (`index.html`) e rode o Live Server
+            document.getElementById("form-sala")
+            .closest(".card")
+            .querySelector("h2")
+            .textContent = "Nova sala";
 
-## Estrutura de pastas
+            salaEmEdicao = null;
+            formulario.reset();
+            botao.textContent = "Cadastrar sala";
 
-```
-projeto/
-├── index.html            → menu inicial
-├── admin-salas.html       → tela de cadastro de salas (Murilo)
-├── professor.html         → tela do professor aloca turma/sala (Davi)
-├── aluno.html              → tela de acesso do aluno / catraca (Isaque)
-├── css/
-│   └── style.css          → estilo compartilhado, não precisa mexer
-└── js/
-    ├── firebase-config.js → configuração central do Firebase (preencher 1x)
-    ├── salas.js            → CRUD de salas (Murilo)
-    ├── turmas.js            → alocação de turma/sala (Davi)
-    ├── logs.js               → logs de acesso + listener tempo real (Isaque)
-    ├── auth.js                → lógica de verificação de acesso (Emerson)
-    └── facial-recognition.js  → reconhecimento facial (Anthony)
-```
+            alert("Sala atualizada!");
+        } catch (erro) {
+            alert(erro.message);
+        } finally {
+            botao.disabled = false;
+        }
+        },`
 
-## O que cada pessoa faz a partir daqui
 
-| Pessoa | Arquivo(s) | Já está pronto | O que falta (TODO) |
-|---|---|---|---|
-| **Murilo** | `js/salas.js`, `admin-salas.html` | Criar, listar e remover salas | Implementar edição (update) e validar campos |
-| **Davi** | `js/turmas.js`, `professor.html` | Ler salas do Murilo, criar alocação de turma | Trocar campos de texto livre por selects de disciplina/professor reais |
-| **Isaque** | `js/logs.js`, `aluno.html` | Registrar log de acesso | Implementar listener em tempo real (`escutarTurma`) e exibir disciplina/sala/módulo/andar de verdade |
-| **Emerson** | `js/auth.js` | Verificação básica se aluno existe | Vincular aluno → turma do dia/horário, decidir junto com Davi como isso vai funcionar |
-| **Anthony** | `js/facial-recognition.js` | Estrutura pronta pra receber a implementação | Tudo — pesquisar face-api.js ou serviço Python e integrar |
-| **Mateus** | Projeto como um todo | — | Acompanhar todo mundo, revisar PRs/commits, manter o README atualizado, cuidar da coerência entre as partes |
+2. Foi implementado a integração do botão de editar e a verificação de campo no arquivo `salas.js`:
 
-## Fluxo de dependência (quem depende de quem)
+        `// Implementação da edição de sala.
+        export function atualizarSala(salaId, dadosNovos) {
+            validarSala(dadosNovos);
+            return update(ref(db, `salas/${salaId}`), dadosNovos);
+        }  
 
-```
-Murilo (salas) → Davi (turmas usam salas) → Emerson (auth usa turmas) → Isaque (tela mostra resultado do auth)
-                                                                              ↑
-                                                            Anthony (substitui a matrícula manual pelo reconhecimento facial)
-```
+        // Validar campos antes de salvar (ex: capacidade > 0,
+        // não deixar número de sala em branco, etc.)
 
-Ou seja: dá pra todo mundo trabalhar em paralelo desde já, porque cada parte
-já tem uma versão "rascunho" funcionando (dados fake/manuais) — vocês vão
-substituindo aos poucos pela versão de verdade.
+        function validarSala(dados) {
+            if ("numero" in dados && !String(dados.numero ?? "").trim()) {
+                throw new Error("Preencha o número da sala.");
+            }
 
-## Sugestão de fluxo de trabalho em grupo
+            if ("numero" in dados) {
+            const numero = String(dados.numero ?? "").trim();
 
-- Um branch por pessoa (ex: `murilo-salas`, `davi-turmas`) e dar merge na `main` conforme for testando
-- Combinar um horário fixo por semana pra todo mundo testar o sistema junto e ver se as partes estão conversando direito
-- Se travar em algo do Firebase, chamar o Mateus ou o Emerson antes de ficar muito tempo travado sozinho
+            if (!/^[0-9]+$/.test(numero)) {
+                throw new Error("O número da sala deve conter apenas números.");
+            }
+        }
+
+            if ("modulo" in dados && !String(dados.modulo ?? "").trim()) {
+                throw new Error("Preencha o módulo.");
+            }
+
+            if ("andar" in dados) {
+                const andar = String(dados.andar ?? "").trim();
+
+                if (andar === "" || !Number.isInteger(Number(andar))) {
+                throw new Error("Informe um andar inteiro.");
+                }
+            }
+
+            if ("capacidade" in dados) {
+                const capacidade = Number(dados.capacidade);
+
+                if (!Number.isInteger(capacidade) || capacidade <= 0) {
+                    throw new Error("A capacidade deve ser um inteiro maior que zero.");
+                }
+            }`
+
+3. Foi ajustado a margem do botão "Editar" no arquivo `style.css`:
+
+    `.btn-editar {
+    margin-right: 8px;
+    }`
