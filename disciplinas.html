@@ -24,6 +24,11 @@
           <option value="">Carregando professores...</option>
         </select>
 
+        <label>Vincular alunos</label>
+        <div id="disc-alunos" style="max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 8px; border-radius: 4px;">
+          Carregando alunos...
+        </div>
+
         <button type="submit" id="btn-submit">Cadastrar disciplina</button>
         <button type="button" id="btn-cancelar" style="display:none;">Cancelar edição</button>
       </form>
@@ -38,13 +43,16 @@
   <script type="module">
     import { criarDisciplina, escutarDisciplinas, atualizarDisciplina, removerDisciplina } from "./js/disciplinas.js";
     import { escutarProfessores } from "./js/professores.js";
+    import { escutarAlunos } from "./js/alunos.js";
 
     let discEmEdicao = null;
     let professoresCache = [];
+    let alunosCache = [];
 
     function limparEdicao() {
       discEmEdicao = null;
       document.getElementById("form-disciplina").reset();
+      document.querySelectorAll("#disc-alunos input[type=checkbox]").forEach((c) => (c.checked = false));
       document.getElementById("titulo-form").textContent = "Nova disciplina";
       document.getElementById("btn-submit").textContent = "Cadastrar disciplina";
       document.getElementById("btn-cancelar").style.display = "none";
@@ -68,11 +76,36 @@
       if (valorAtual) select.value = valorAtual;
     });
 
+    escutarAlunos((alunos) => {
+      alunosCache = alunos;
+      const container = document.getElementById("disc-alunos");
+      if (alunos.length === 0) {
+        container.innerHTML = "<p>Nenhum aluno cadastrado.</p>";
+        return;
+      }
+      const selecionados = Array.from(
+        container.querySelectorAll("input[type=checkbox]:checked")
+      ).map((c) => c.value);
+      container.innerHTML = alunos
+        .map(
+          (a) => `
+        <label style="display:block;">
+          <input type="checkbox" value="${a.id}" ${selecionados.includes(a.id) ? "checked" : ""} />
+          ${a.nome} — Matrícula ${a.matricula}
+        </label>`
+        )
+        .join("");
+    });
+
     document.getElementById("form-disciplina").addEventListener("submit", async (e) => {
       e.preventDefault();
+      const alunoIds = Array.from(
+        document.querySelectorAll("#disc-alunos input[type=checkbox]:checked")
+      ).map((c) => c.value);
       const dados = {
         nome: document.getElementById("disc-nome").value,
         professorId: document.getElementById("disc-professor").value,
+        alunoIds,
       };
       try {
         if (discEmEdicao) {
@@ -97,9 +130,14 @@
       container.innerHTML = disciplinas
         .map((d) => {
           const prof = professoresCache.find((p) => p.id === d.professorId);
+          const nomesAlunos = (d.alunoIds || [])
+            .map((id) => alunosCache.find((a) => a.id === id)?.nome)
+            .filter(Boolean)
+            .join(", ");
           return `
         <div class="lista-item">
-          <span>${d.nome} — Prof. ${prof ? prof.nome : "(não encontrado)"}</span>
+          <span>${d.nome} — Prof. ${prof ? prof.nome : "(não encontrado)"}<br>
+          <small>Alunos: ${nomesAlunos || "nenhum vinculado"}</small></span>
           <button data-id="${d.id}" class="btn-editar">Editar</button>
           <button data-id="${d.id}" class="btn-remover">Remover</button>
         </div>`;
@@ -114,6 +152,9 @@
           document.getElementById("titulo-form").textContent = "Editando disciplina";
           document.getElementById("disc-nome").value = disc.nome;
           document.getElementById("disc-professor").value = disc.professorId;
+          document
+            .querySelectorAll("#disc-alunos input[type=checkbox]")
+            .forEach((c) => (c.checked = (disc.alunoIds || []).includes(c.value)));
           document.getElementById("btn-submit").textContent = "Salvar alterações";
           document.getElementById("btn-cancelar").style.display = "inline-block";
           document.getElementById("disc-nome").focus();
