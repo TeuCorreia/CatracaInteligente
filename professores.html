@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Professores</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Cadastro de Professores</h1>
+    <nav><a href="index.html">← Voltar</a></nav>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2 id="titulo-form">Novo professor</h2>
+      <form id="form-professor">
+        <label>Nome</label>
+        <input type="text" id="prof-nome" required />
+
+        <label>E-mail</label>
+        <input type="email" id="prof-email" required />
+
+        <button type="submit" id="btn-submit">Cadastrar professor</button>
+        <button type="button" id="btn-cancelar" style="display:none;">Cancelar edição</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Professores cadastrados</h2>
+      <div id="lista-professores">Carregando...</div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { criarProfessor, escutarProfessores, atualizarProfessor, removerProfessor } from "./js/professores.js";
+
+    let profEmEdicao = null;
+
+    function limparEdicao() {
+      profEmEdicao = null;
+      document.getElementById("form-professor").reset();
+      document.getElementById("titulo-form").textContent = "Novo professor";
+      document.getElementById("btn-submit").textContent = "Cadastrar professor";
+      document.getElementById("btn-cancelar").style.display = "none";
+    }
+
+    document.getElementById("btn-cancelar").addEventListener("click", limparEdicao);
+
+    document.getElementById("form-professor").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const dados = {
+        nome: document.getElementById("prof-nome").value,
+        email: document.getElementById("prof-email").value,
+      };
+      try {
+        if (profEmEdicao) {
+          await atualizarProfessor(profEmEdicao, dados);
+          alert("Professor atualizado!");
+        } else {
+          await criarProfessor(dados);
+          alert("Professor cadastrado!");
+        }
+        limparEdicao();
+      } catch (erro) {
+        alert(erro.message);
+      }
+    });
+
+    escutarProfessores((professores) => {
+      const container = document.getElementById("lista-professores");
+      if (professores.length === 0) {
+        container.innerHTML = "<p>Nenhum professor cadastrado ainda.</p>";
+        return;
+      }
+      container.innerHTML = professores
+        .map(
+          (p) => `
+        <div class="lista-item">
+          <span>${p.nome} — ${p.email}</span>
+          <button data-id="${p.id}" class="btn-editar">Editar</button>
+          <button data-id="${p.id}" class="btn-remover">Remover</button>
+        </div>`
+        )
+        .join("");
+
+      container.querySelectorAll(".btn-editar").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const prof = professores.find((p) => p.id === btn.dataset.id);
+          if (!prof) return;
+          profEmEdicao = prof.id;
+          document.getElementById("titulo-form").textContent = "Editando professor";
+          document.getElementById("prof-nome").value = prof.nome;
+          document.getElementById("prof-email").value = prof.email;
+          document.getElementById("btn-submit").textContent = "Salvar alterações";
+          document.getElementById("btn-cancelar").style.display = "inline-block";
+          document.getElementById("prof-nome").focus();
+        });
+      });
+
+      container.querySelectorAll(".btn-remover").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          if (confirm("Remover este professor?")) await removerProfessor(btn.dataset.id);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

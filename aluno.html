@@ -14,49 +14,112 @@
   </header>
 
   <main>
-   <div class="card" id="resultado" style="display:none;">
-  <h2>Resultado</h2>
 
-  <p id="texto-resultado"></p>
+    <div class="card">
+      <h2>Simular reconhecimento</h2>
 
-  <div id="dados-turma" style="display:none;">
-    <h3>Informações da turma</h3>
+      <label for="matricula">Matrícula do aluno</label>
 
-    <p>Disciplina: <strong id="disciplina"></strong></p>
-    <p>Sala: <strong id="sala"></strong></p>
-    <p>Módulo: <strong id="modulo"></strong></p>
-    <p>Andar: <strong id="andar"></strong></p>
-  </div>
-</div>
+      <input
+        type="text"
+        id="matricula"
+        placeholder="Ex: 2024001"
+      />
+
+      <button id="btn-verificar">
+        Verificar acesso
+      </button>
+    </div>
+
+    <div class="card" id="resultado" style="display:none;">
+      <h2>Resultado</h2>
+
+      <p id="texto-resultado"></p>
+
+      <div id="dados-turma" style="display:none;">
+        <h3>Informações da turma</h3>
+
+        <p>Disciplina: <strong id="disciplina"></strong></p>
+        <p>Sala: <strong id="sala"></strong></p>
+        <p>Módulo: <strong id="modulo"></strong></p>
+        <p>Andar: <strong id="andar"></strong></p>
+      </div>
+    </div>
+
   </main>
 
   <script type="module">
-  import { verificarAcesso } from "./js/auth.js";
+    import { verificarAcesso } from "./js/auth.js";
 import { escutarTurma } from "./js/logs.js";
 
-    document.getElementById("btn-verificar").addEventListener("click", async () => {
-      const matricula = document.getElementById("matricula").value.trim();
-      if (!matricula) return;
+let pararEscuta = null;
 
-      const resultadoDiv = document.getElementById("resultado");
-      const texto = document.getElementById("texto-resultado");
-      resultadoDiv.style.display = "block";
-      texto.textContent = "Verificando...";
+document.getElementById("btn-verificar").addEventListener("click", async () => {
 
-      const resposta = await verificarAcesso(matricula);
+  const matricula = document.getElementById("matricula").value.trim();
 
-      if (resposta.autorizado) {
-        texto.innerHTML = `<span class="status-ok">Acesso liberado.</span><br/>
-          TODO (Isaque + Emerson): mostrar aqui disciplina, sala, módulo e andar
-          assim que a busca de turma estiver implementada.`;
-      } else {
-        texto.innerHTML = `<span class="status-negado">Acesso negado.</span> (${resposta.motivo})`;
+  if (!matricula) return;
+
+  // Encerra uma escuta anterior
+  if (pararEscuta) {
+    pararEscuta();
+    pararEscuta = null;
+  }
+
+  const resultadoDiv = document.getElementById("resultado");
+  const texto = document.getElementById("texto-resultado");
+  const dadosTurma = document.getElementById("dados-turma");
+
+  resultadoDiv.style.display = "block";
+  dadosTurma.style.display = "none";
+  texto.textContent = "Verificando acesso...";
+
+  try {
+    const resposta = await verificarAcesso(matricula);
+
+    if (!resposta.autorizado) {
+      texto.textContent = `Acesso negado: ${resposta.motivo}`;
+      return;
+    }
+
+    texto.textContent = "Acesso liberado! Aguardando informações da turma...";
+
+    if (!resposta.turmaId) {
+      texto.textContent = "Acesso liberado, mas nenhuma turma foi vinculada ao aluno.";
+      return;
+    }
+
+    pararEscuta = escutarTurma(resposta.turmaId, (turma) => {
+
+      if (!turma) {
+        texto.textContent = "Turma não encontrada.";
+        dadosTurma.style.display = "none";
+        return;
       }
+
+      texto.textContent = "Acesso liberado! Informações atualizadas.";
+
+      document.getElementById("disciplina").textContent =
+        turma.disciplina ?? "Não informado";
+
+      document.getElementById("sala").textContent =
+        turma.sala ?? "Não informado";
+
+      document.getElementById("modulo").textContent =
+        turma.modulo ?? "Não informado";
+
+      document.getElementById("andar").textContent =
+        turma.andar ?? "Não informado";
+
+      dadosTurma.style.display = "block";
     });
 
-    // TODO (Isaque): usar escutarTurma() de js/logs.js aqui para atualizar
-    // a tela automaticamente se o professor mudar a sala DEPOIS que o
-    // aluno já tiver passado (esse é o requisito de "tempo real").
+  } catch (erro) {
+    console.error(erro);
+    texto.textContent = "Erro ao verificar acesso. Tente novamente.";
+  }
+});
+
   </script>
 </body>
 </html>

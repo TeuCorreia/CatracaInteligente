@@ -1,0 +1,63 @@
+<!-- SEED — popula o Firebase com dados de exemplo (rodar uma vez)
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Seed — Dados de exemplo</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Seed — Dados de exemplo</h1>
+    <nav><a href="index.html">← Voltar</a></nav>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2>Popular o banco</h2>
+      <p>Clique para cadastrar salas, professores, disciplinas, alunos e uma turma de hoje.
+      Os alunos cadastrados são: matrículas <strong>2024001</strong> e <strong>2024002</strong>.</p>
+      <button id="btn-seed">Popular banco</button>
+      <p id="status"></p>
+    </div>
+  </main>
+
+  <script type="module">
+    import { db } from "./js/firebase-config.js";
+    import { ref, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    document.getElementById("btn-seed").addEventListener("click", async () => {
+      const status = document.getElementById("status");
+      status.textContent = "Gravando...";
+
+      const d = new Date();
+      const hoje = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+      try {
+        const sala1 = await push(ref(db, "salas"), { numero: "101", modulo: "A", andar: 1, capacidade: 40, disponivel: true });
+        await push(ref(db, "salas"), { numero: "202", modulo: "B", andar: 2, capacidade: 30, disponivel: true });
+
+        const prof1 = await push(ref(db, "professores"), { nome: "Prof. Ana", email: "ana@escola.com" });
+
+        const disc1 = await push(ref(db, "disciplinas"), { nome: "Programação Web", professorId: prof1.key });
+
+        await push(ref(db, "alunos"), { nome: "João Silva", matricula: "2024001", faceId: null, ativo: true });
+        await push(ref(db, "alunos"), { nome: "Maria Souza", matricula: "2024002", faceId: null, ativo: true });
+
+        await push(ref(db, "turmas"), {
+          disciplina: "Programação Web",
+          professorId: prof1.key,
+          salaId: sala1.key,
+          data: hoje,
+          horario: "19:00",
+        });
+
+        status.textContent = "Banco populado com sucesso! Você já pode usar o aluno (matrícula 2024001).";
+      } catch (erro) {
+        status.textContent = "Erro: " + erro.message;
+      }
+    });
+  </script>
+</body>
+</html> -->
