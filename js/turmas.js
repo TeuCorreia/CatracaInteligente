@@ -25,22 +25,6 @@ export function escutarSalasParaSelect(callback) {
   });
 }
 
-// Lê professores cadastrados para popular o <select>
-export function escutarProfessores(callback) {
-  onValue(ref(db, "professores"), (snapshot) => {
-    const data = snapshot.val() || {};
-    callback(Object.entries(data).map(([id, p]) => ({ id, ...p })));
-  });
-}
-
-// Lê disciplinas cadastradas para popular o <select>
-export function escutarDisciplinas(callback) {
-  onValue(ref(db, "disciplinas"), (snapshot) => {
-    const data = snapshot.val() || {};
-    callback(Object.entries(data).map(([id, d]) => ({ id, ...d })));
-  });
-}
-
 // Cria uma alocação de turma (professor escolhe sala/módulo/andar/data)
 export function criarTurma({ disciplina, professorId, salaId, data, horario }) {
   return push(ref(db, "turmas"), {

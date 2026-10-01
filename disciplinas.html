@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Disciplinas</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Cadastro de Disciplinas</h1>
+    <nav><a href="index.html">← Voltar</a></nav>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2 id="titulo-form">Nova disciplina</h2>
+      <form id="form-disciplina">
+        <label>Nome</label>
+        <input type="text" id="disc-nome" required />
+
+        <label>Professor</label>
+        <select id="disc-professor" required>
+          <option value="">Carregando professores...</option>
+        </select>
+
+        <button type="submit" id="btn-submit">Cadastrar disciplina</button>
+        <button type="button" id="btn-cancelar" style="display:none;">Cancelar edição</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Disciplinas cadastradas</h2>
+      <div id="lista-disciplinas">Carregando...</div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { criarDisciplina, escutarDisciplinas, atualizarDisciplina, removerDisciplina } from "./js/disciplinas.js";
+    import { escutarProfessores } from "./js/professores.js";
+
+    let discEmEdicao = null;
+    let professoresCache = [];
+
+    function limparEdicao() {
+      discEmEdicao = null;
+      document.getElementById("form-disciplina").reset();
+      document.getElementById("titulo-form").textContent = "Nova disciplina";
+      document.getElementById("btn-submit").textContent = "Cadastrar disciplina";
+      document.getElementById("btn-cancelar").style.display = "none";
+    }
+
+    document.getElementById("btn-cancelar").addEventListener("click", limparEdicao);
+
+    escutarProfessores((professores) => {
+      professoresCache = professores;
+      const select = document.getElementById("disc-professor");
+      const valorAtual = select.value;
+      select.innerHTML = professores.length
+        ? ""
+        : "<option value=''>Nenhum professor cadastrado</option>";
+      professores.forEach((p) => {
+        const option = document.createElement("option");
+        option.value = p.id;
+        option.textContent = p.nome;
+        select.appendChild(option);
+      });
+      if (valorAtual) select.value = valorAtual;
+    });
+
+    document.getElementById("form-disciplina").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const dados = {
+        nome: document.getElementById("disc-nome").value,
+        professorId: document.getElementById("disc-professor").value,
+      };
+      try {
+        if (discEmEdicao) {
+          await atualizarDisciplina(discEmEdicao, dados);
+          alert("Disciplina atualizada!");
+        } else {
+          await criarDisciplina(dados);
+          alert("Disciplina cadastrada!");
+        }
+        limparEdicao();
+      } catch (erro) {
+        alert(erro.message);
+      }
+    });
+
+    escutarDisciplinas((disciplinas) => {
+      const container = document.getElementById("lista-disciplinas");
+      if (disciplinas.length === 0) {
+        container.innerHTML = "<p>Nenhuma disciplina cadastrada ainda.</p>";
+        return;
+      }
+      container.innerHTML = disciplinas
+        .map((d) => {
+          const prof = professoresCache.find((p) => p.id === d.professorId);
+          return `
+        <div class="lista-item">
+          <span>${d.nome} — Prof. ${prof ? prof.nome : "(não encontrado)"}</span>
+          <button data-id="${d.id}" class="btn-editar">Editar</button>
+          <button data-id="${d.id}" class="btn-remover">Remover</button>
+        </div>`;
+        })
+        .join("");
+
+      container.querySelectorAll(".btn-editar").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const disc = disciplinas.find((d) => d.id === btn.dataset.id);
+          if (!disc) return;
+          discEmEdicao = disc.id;
+          document.getElementById("titulo-form").textContent = "Editando disciplina";
+          document.getElementById("disc-nome").value = disc.nome;
+          document.getElementById("disc-professor").value = disc.professorId;
+          document.getElementById("btn-submit").textContent = "Salvar alterações";
+          document.getElementById("btn-cancelar").style.display = "inline-block";
+          document.getElementById("disc-nome").focus();
+        });
+      });
+
+      container.querySelectorAll(".btn-remover").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          if (confirm("Remover esta disciplina?")) await removerDisciplina(btn.dataset.id);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
