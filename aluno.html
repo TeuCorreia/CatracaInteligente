@@ -36,7 +36,8 @@
   </main>
 
   <script type="module">
-    import { verificarAcesso } from "./js/auth.js";
+  import { verificarAcesso } from "./js/auth.js";
+import { escutarTurma } from "./js/logs.js";
 
     document.getElementById("btn-verificar").addEventListener("click", async () => {
       const matricula = document.getElementById("matricula").value.trim();
