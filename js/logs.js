@@ -29,10 +29,19 @@ export function registrarLog({ alunoId, turmaId, status }) {
 
 // Escuta em tempo real os dados de UMA turma específica, pra mostrar
 // na tela do aluno assim que o professor alterar algo (ex: trocou de sala)
+
 export function escutarTurma(turmaId, callback) {
-  onValue(ref(db, `turmas/${turmaId}`), (snapshot) => {
-    callback(snapshot.val());
+  const turmaRef = ref(db, `turmas/${turmaId}`);
+
+  const cancelarEscuta = onValue(turmaRef, (snapshot) => {
+    if (snapshot.exists()) {
+      callback(snapshot.val());
+    } else {
+      callback(null);
+    }
   });
+
+  return cancelarEscuta;
 }
 
 // TODO (Isaque): criar também uma função "escutarUltimosLogs" que lista
