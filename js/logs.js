@@ -28,11 +28,42 @@ export function registrarLog({ alunoId, turmaId, status }) {
 }
 
 // Escuta em tempo real os dados de UMA turma específica, pra mostrar
-// na tela do aluno assim que o professor alterar algo (ex: trocou de sala)
+// na tela do aluno assim que o professor alterar algo (ex: trocou de sala).
+// Também resolve a sala da turma (salaId -> dados da sala) e devolve uma
+// função para parar de escutar.
 export function escutarTurma(turmaId, callback) {
-  onValue(ref(db, `turmas/${turmaId}`), (snapshot) => {
-    callback(snapshot.val());
+  let pararSala = null;
+
+  const pararTurma = onValue(ref(db, `turmas/${turmaId}`), (snapshot) => {
+    const turma = snapshot.val();
+
+    if (!turma) {
+      callback(null);
+      return;
+    }
+
+    if (pararSala) pararSala();
+
+    if (turma.salaId) {
+      pararSala = onValue(ref(db, `salas/${turma.salaId}`), (salaSnap) => {
+        const sala = salaSnap.val();
+        callback({
+          ...turma,
+          id: turmaId,
+          sala: sala ? sala.numero : "Não encontrada",
+          modulo: sala ? sala.modulo : "—",
+          andar: sala ? sala.andar : "—",
+        });
+      });
+    } else {
+      callback({ ...turma, id: turmaId });
+    }
   });
+
+  return () => {
+    pararTurma();
+    if (pararSala) pararSala();
+  };
 }
 
 // TODO (Isaque): criar também uma função "escutarUltimosLogs" que lista

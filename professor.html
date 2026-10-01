@@ -56,24 +56,22 @@
 
         <label>Disciplina</label>
 
-        <input
-          type="text"
-          id="disciplina"
-          placeholder="Digite o nome da disciplina"
-          required
-        />
+        <select id="disciplina" required>
+
+          <option value="">Carregando disciplinas...</option>
+
+        </select>
 
 
         <!-- PROFESSOR -->
 
         <label>Professor</label>
 
-        <input
-          type="text"
-          id="professorId"
-          placeholder="Nome do professor"
-          required
-        />
+        <select id="professorId" required>
+
+          <option value="">Carregando professores...</option>
+
+        </select>
 
 
         <!-- SALA -->
@@ -129,9 +127,43 @@
     // IMPORTA AS FUNÇÕES
     // ============================================================
 
-    import { criarTurma } from "./js/turmas.js";
+    import { criarTurma, escutarProfessores, escutarDisciplinas } from "./js/turmas.js";
 
     import { escutarSalas } from "./js/salas.js";
+
+
+    // Data padrão: hoje
+
+    document.getElementById("data").valueAsDate = new Date();
+
+
+    // Carregar professores e disciplinas
+
+    escutarProfessores((professores) => {
+      const select = document.getElementById("professorId");
+      select.innerHTML = professores.length
+        ? ""
+        : "<option value=''>Nenhum professor cadastrado (rode seed.html)</option>";
+      professores.forEach((p) => {
+        const option = document.createElement("option");
+        option.value = p.nome;
+        option.textContent = p.nome;
+        select.appendChild(option);
+      });
+    });
+
+    escutarDisciplinas((disciplinas) => {
+      const select = document.getElementById("disciplina");
+      select.innerHTML = disciplinas.length
+        ? ""
+        : "<option value=''>Nenhuma disciplina cadastrada (rode seed.html)</option>";
+      disciplinas.forEach((d) => {
+        const option = document.createElement("option");
+        option.value = d.nome;
+        option.textContent = d.nome;
+        select.appendChild(option);
+      });
+    });
 
 
     // ============================================================

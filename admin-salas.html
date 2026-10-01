@@ -45,14 +45,20 @@
     let salaEmEdicao = null;
 
     document.getElementById("form-sala").addEventListener("submit", async (e) => {
+      // Na edição, quem salva é o outro listener (capture).
+      if (salaEmEdicao !== null) return;
       e.preventDefault();
-      await criarSala({
-        numero: document.getElementById("numero").value,
-        modulo: document.getElementById("modulo").value,
-        andar: document.getElementById("andar").value,
-        capacidade: document.getElementById("capacidade").value,
-      });
-      e.target.reset();
+      try {
+        await criarSala({
+          numero: document.getElementById("numero").value,
+          modulo: document.getElementById("modulo").value,
+          andar: document.getElementById("andar").value,
+          capacidade: document.getElementById("capacidade").value,
+        });
+        e.target.reset();
+      } catch (erro) {
+        alert(erro.message);
+      }
     });
 
     escutarSalas((salas) => {
