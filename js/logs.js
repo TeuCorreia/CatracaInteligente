@@ -3,9 +3,6 @@ import {
   ref,
   push,
   onValue,
-  query,
-  orderByChild,
-  limitToLast,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const statusValidos = new Set(["liberado", "negado"]);
@@ -32,28 +29,45 @@ export function escutarTurma(turmaId, callback, aoFalhar) {
   return onValue(
     turmaRef,
     (snapshot) => {
-      if (snapshot.exists()) {
-        callback({ ...snapshot.val(), id: turmaId });
-      } else {
+      if (!snapshot.exists()) {
         callback(null);
+        return;
       }
+
+      const turma = { ...snapshot.val(), id: turmaId };
+
+      if (!turma.salaId) {
+        callback(turma);
+        return;
+      }
+
+      // Resolve os dados da sala (numero, modulo, andar) junto da turma
+      onValue(ref(db, `salas/${turma.salaId}`), (salaSnap) => {
+        const sala = salaSnap.val();
+        callback({
+          ...turma,
+          sala: sala ? sala.numero : "Não encontrada",
+          modulo: sala ? sala.modulo : "—",
+          andar: sala ? sala.andar : "—",
+        });
+      });
     },
     aoFalhar
   );
-}
 }
 
 // Opcional: acompanha os registros mais recentes, com o mais novo primeiro.
 export function escutarUltimosLogs(callback, quantidade = 20, aoFalhar) {
   const limite = Number.isInteger(quantidade) && quantidade > 0 ? quantidade : 20;
-  const consulta = query(ref(db, "logs_acesso"), orderByChild("timestamp"), limitToLast(limite));
+  const refLogs = ref(db, "logs_acesso");
 
   return onValue(
-    consulta,
+    refLogs,
     (snapshot) => {
       const logs = [];
       snapshot.forEach((item) => logs.push({ ...item.val(), id: item.key }));
-      callback(logs.reverse());
+      logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      callback(logs.slice(0, limite));
     },
     aoFalhar
   );

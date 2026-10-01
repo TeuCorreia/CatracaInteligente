@@ -84,12 +84,14 @@ document.getElementById("btn-verificar").addEventListener("click", async () => {
 
     texto.textContent = "Acesso liberado! Aguardando informações da turma...";
 
-    if (!resposta.turmaId) {
+    const turmaId = resposta.turma?.id ?? resposta.turmaId;
+
+    if (!turmaId) {
       texto.textContent = "Acesso liberado, mas nenhuma turma foi vinculada ao aluno.";
       return;
     }
 
-    pararEscuta = escutarTurma(resposta.turmaId, (turma) => {
+    pararEscuta = escutarTurma(turmaId, (turma) => {
 
       if (!turma) {
         texto.textContent = "Turma não encontrada.";
