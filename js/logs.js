@@ -1,44 +1,49 @@
-// ============================================================
-// LOGS DE ACESSO / LISTENER EM TEMPO REAL -- Aluno — responsável: Isaque
-// ============================================================
-// O que você precisa aprender aqui: como "escutar" uma mudança no
-// Firebase em tempo real (onValue) e reagir a ela na tela, sem
-// precisar recarregar a página. Esse é o conceito central da parte
-// de "tempo real" que o projeto exige.
-//
-// Tutorial recomendado:
-// https://firebase.google.com/docs/database/web/read-and-write#listen_for_value_events
-// ============================================================
-
 import { db } from "./firebase-config.js";
 import {
   ref,
   push,
   onValue,
+  query,
+  orderByChild,
+  limitToLast,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// Registra um log de acesso (liberado ou negado)
-export function registrarLog({ alunoId, turmaId, status }) {
+const statusValidos = new Set(["liberado", "negado"]);
+
+export function registrarLog({ alunoId = null, turmaId = null, status }) {
+  if (!statusValidos.has(status)) {
+    throw new Error(`Status de acesso inválido: ${status}`);
+  }
+
   return push(ref(db, "logs_acesso"), {
-    alunoId,
+    alunoId: alunoId || null,
     turmaId: turmaId || null,
-    status, // "liberado" ou "negado"
+    status,
     timestamp: Date.now(),
   });
 }
 
-// Escuta em tempo real os dados de UMA turma específica, pra mostrar
-// na tela do aluno assim que o professor alterar algo (ex: trocou de sala)
-export function escutarTurma(turmaId, callback) {
-  onValue(ref(db, `turmas/${turmaId}`), (snapshot) => {
-    callback(snapshot.val());
-  });
+// Chama o callback novamente quando a turma mudar; retorna a função para parar de escutar.
+export function escutarTurma(turmaId, callback, aoFalhar) {
+  return onValue(
+    ref(db, `turmas/${turmaId}`),
+    (snapshot) => callback(snapshot.exists() ? { ...snapshot.val(), id: turmaId } : null),
+    aoFalhar
+  );
 }
 
-// TODO (Isaque): criar também uma função "escutarUltimosLogs" que lista
-// os últimos acessos na tela (bom pra mostrar numa tela de "monitoramento"
-// se o grupo quiser evoluir o projeto depois).
+// Opcional: acompanha os registros mais recentes, com o mais novo primeiro.
+export function escutarUltimosLogs(callback, quantidade = 20, aoFalhar) {
+  const limite = Number.isInteger(quantidade) && quantidade > 0 ? quantidade : 20;
+  const consulta = query(ref(db, "logs_acesso"), orderByChild("timestamp"), limitToLast(limite));
 
-// TODO (Isaque): decidir com o Emerson o que fazer quando "status" for
-// "negado" — hoje o log é salvo, mas a tela do aluno.html só mostra uma
-// mensagem simples de acesso negado.
+  return onValue(
+    consulta,
+    (snapshot) => {
+      const logs = [];
+      snapshot.forEach((item) => logs.push({ ...item.val(), id: item.key }));
+      callback(logs.reverse());
+    },
+    aoFalhar
+  );
+}
