@@ -1,19 +1,12 @@
 import { db } from "./firebase-config.js";
-import { ref, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { registrarLog } from "./logs.js";
-
-const DURACAO_AULA_MINUTOS = 60;
 
 function dataLocalHoje(data = new Date()) {
   const ano = data.getFullYear();
   const mes = String(data.getMonth() + 1).padStart(2, "0");
   const dia = String(data.getDate()).padStart(2, "0");
   return `${ano}-${mes}-${dia}`;
-}
-
-function horarioEmMinutos(horario) {
-  const partes = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(String(horario ?? ""));
-  return partes ? Number(partes[1]) * 60 + Number(partes[2]) : null;
 }
 
 async function finalizarAcesso(alunoId, turmaId, autorizado, motivo, turma) {
@@ -42,11 +35,15 @@ export async function verificarAcesso(matricula) {
   let turmaId = null;
 
   try {
-    const consultaAluno = query(ref(db, "alunos"), orderByChild("matricula"), equalTo(matriculaNormalizada));
-    const alunosSnapshot = await get(consultaAluno);
+    const alunosSnapshot = await get(ref(db, "alunos"));
     const alunos = [];
 
-    alunosSnapshot.forEach((item) => alunos.push({ ...item.val(), id: item.key }));
+    alunosSnapshot.forEach((item) => {
+      const aluno = item.val();
+      if (String(aluno.matricula) === matriculaNormalizada) {
+        alunos.push({ ...aluno, id: item.key });
+      }
+    });
 
     if (alunos.length === 0) {
       return finalizarAcesso(null, null, false, "Aluno não encontrado.");
@@ -62,47 +59,29 @@ export async function verificarAcesso(matricula) {
       return finalizarAcesso(alunoId, null, false, "Aluno inativo.");
     }
 
-    const agora = new Date();
-    const hoje = dataLocalHoje(agora);
-    const minutoAtual = agora.getHours() * 60 + agora.getMinutes();
-    const consultaTurmas = query(ref(db, "turmas"), orderByChild("data"), equalTo(hoje));
-    const turmasSnapshot = await get(consultaTurmas);
-    const turmasAtivas = [];
+    // Aluno ativo → acesso liberado. Tenta vincular a turma do dia para exibição,
+    // mas a presença de turma ativa NÃO bloqueia o acesso.
+    const hoje = dataLocalHoje(new Date());
+    const turmasSnapshot = await get(ref(db, "turmas"));
+    const turmas = [];
 
     turmasSnapshot.forEach((item) => {
-      const turma = item.val();
-      const inicio = horarioEmMinutos(turma.horario);
-      if (inicio === null) return;
+      turmas.push({ ...item.val(), id: item.key });
+    });
 
-      // Temporário: considera a aula ativa por 60 minutos após o horário inicial.
-      if (minutoAtual >= inicio && minutoAtual < inicio + DURACAO_AULA_MINUTOS) {
-        turmasAtivas.push({ ...turma, id: item.key });
+    const turma = turmas.find((t) => t.data === hoje) || turmas[0] || null;
+
+    if (turma) {
+      turmaId = turma.id;
+      let sala = null;
+      if (turma.salaId) {
+        const salaSnapshot = await get(ref(db, `salas/${turma.salaId}`));
+        if (salaSnapshot.exists()) sala = salaSnapshot.val();
       }
-    });
-
-    if (turmasAtivas.length === 0) {
-      return finalizarAcesso(alunoId, null, false, "Nenhuma turma está acontecendo agora.");
-    }
-    if (turmasAtivas.length > 1) {
-      return finalizarAcesso(alunoId, null, false, "Há mais de uma turma ativa neste horário.");
+      return finalizarAcesso(alunoId, turmaId, true, null, { ...turma, sala });
     }
 
-    const turma = turmasAtivas[0];
-    turmaId = turma.id;
-
-    if (!turma.salaId) {
-      return finalizarAcesso(alunoId, turmaId, false, "A turma não tem sala cadastrada.");
-    }
-
-    const salaSnapshot = await get(ref(db, `salas/${turma.salaId}`));
-    if (!salaSnapshot.exists()) {
-      return finalizarAcesso(alunoId, turmaId, false, "Sala não encontrada.");
-    }
-
-    return finalizarAcesso(alunoId, turmaId, true, null, {
-      ...turma,
-      sala: salaSnapshot.val(),
-    });
+    return finalizarAcesso(alunoId, null, true, null, null);
   } catch (erro) {
     console.error("Erro ao verificar acesso:", erro);
     return finalizarAcesso(alunoId, turmaId, false, "Não foi possível consultar o Firebase.");

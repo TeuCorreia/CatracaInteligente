@@ -15,6 +15,8 @@
 // TODO (Anthony): implementar reconhecerRosto() de verdade, cadastro
 // facial do aluno, e decidir onde essa etapa roda (no navegador ou
 // em um serviço separado que devolve a matrícula reconhecida).
+// TODO (Gabriel): cadastro facial dos alunos — salvar os descritores
+// em alunos/{id}/faceDescriptor e apoiar a integração com o modelo.
 // ============================================================
 
 export async function reconhecerRosto() {

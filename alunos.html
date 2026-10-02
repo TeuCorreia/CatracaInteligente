@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Alunos</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Cadastro de Alunos</h1>
+    <nav><a href="index.html">← Voltar</a></nav>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2 id="titulo-form">Novo aluno</h2>
+      <form id="form-aluno">
+        <label>Nome</label>
+        <input type="text" id="aluno-nome" required />
+
+        <label>Matrícula</label>
+        <input type="text" id="aluno-matricula" required pattern="[0-9]+" inputmode="numeric" title="Digite apenas números." />
+
+        <label class="checkbox-linha">
+          <input type="checkbox" id="aluno-ativo" checked />
+          Matrícula ativa
+        </label>
+
+        <button type="submit" id="btn-submit">Cadastrar aluno</button>
+        <button type="button" id="btn-cancelar" style="display:none;">Cancelar edição</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Alunos cadastrados</h2>
+      <div id="lista-alunos">Carregando...</div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { criarAluno, escutarAlunos, atualizarAluno, removerAluno } from "./js/alunos.js";
+
+    let alunoEmEdicao = null;
+
+    function limparEdicao() {
+      alunoEmEdicao = null;
+      document.getElementById("form-aluno").reset();
+      document.getElementById("aluno-ativo").checked = true;
+      document.getElementById("titulo-form").textContent = "Novo aluno";
+      document.getElementById("btn-submit").textContent = "Cadastrar aluno";
+      document.getElementById("btn-cancelar").style.display = "none";
+    }
+
+    document.getElementById("btn-cancelar").addEventListener("click", limparEdicao);
+
+    document.getElementById("form-aluno").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const dados = {
+        nome: document.getElementById("aluno-nome").value,
+        matricula: document.getElementById("aluno-matricula").value,
+        ativo: document.getElementById("aluno-ativo").checked,
+      };
+      try {
+        if (alunoEmEdicao) {
+          await atualizarAluno(alunoEmEdicao, dados);
+          alert("Aluno atualizado!");
+        } else {
+          await criarAluno(dados);
+          alert("Aluno cadastrado!");
+        }
+        limparEdicao();
+      } catch (erro) {
+        alert(erro.message);
+      }
+    });
+
+    escutarAlunos((alunos) => {
+      const container = document.getElementById("lista-alunos");
+      if (alunos.length === 0) {
+        container.innerHTML = "<p>Nenhum aluno cadastrado ainda.</p>";
+        return;
+      }
+      container.innerHTML = alunos
+        .map(
+          (a) => `
+        <div class="lista-item">
+          <span>${a.nome} — Matrícula ${a.matricula} (${a.ativo === false ? "INATIVO" : "ativo"})</span>
+          <button data-id="${a.id}" class="btn-editar">Editar</button>
+          <button data-id="${a.id}" class="btn-remover">Remover</button>
+        </div>`
+        )
+        .join("");
+
+      container.querySelectorAll(".btn-editar").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const aluno = alunos.find((a) => a.id === btn.dataset.id);
+          if (!aluno) return;
+          alunoEmEdicao = aluno.id;
+          document.getElementById("titulo-form").textContent = "Editando aluno";
+          document.getElementById("aluno-nome").value = aluno.nome;
+          document.getElementById("aluno-matricula").value = aluno.matricula;
+          document.getElementById("aluno-ativo").checked = aluno.ativo !== false;
+          document.getElementById("btn-submit").textContent = "Salvar alterações";
+          document.getElementById("btn-cancelar").style.display = "inline-block";
+          document.getElementById("aluno-nome").focus();
+        });
+      });
+
+      container.querySelectorAll(".btn-remover").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          if (confirm("Remover este aluno?")) await removerAluno(btn.dataset.id);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
