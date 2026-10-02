@@ -5,9 +5,13 @@
 import { db } from "./firebase-config.js";
 import { ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-export function criarDisciplina({ nome, professorId }) {
+export function criarDisciplina({ nome, professorId, alunoIds = [] }) {
   validarDisciplina({ nome, professorId });
-  return push(ref(db, "disciplinas"), { nome: nome.trim(), professorId });
+  return push(ref(db, "disciplinas"), {
+    nome: nome.trim(),
+    professorId,
+    alunoIds,
+  });
 }
 
 export function escutarDisciplinas(callback) {
@@ -22,6 +26,7 @@ export function atualizarDisciplina(disciplinaId, dadosNovos) {
   return update(ref(db, `disciplinas/${disciplinaId}`), {
     nome: dadosNovos.nome.trim(),
     professorId: dadosNovos.professorId,
+    alunoIds: dadosNovos.alunoIds || [],
   });
 }
 

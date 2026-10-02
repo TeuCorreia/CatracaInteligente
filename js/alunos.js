@@ -10,9 +10,6 @@ import {
   update,
   remove,
   get,
-  query,
-  orderByChild,
-  equalTo,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 export function criarAluno({ nome, matricula }) {
@@ -46,10 +43,15 @@ export function removerAluno(alunoId) {
 }
 
 export async function matriculaExiste(matricula, ignorarId = null) {
-  const q = query(ref(db, "alunos"), orderByChild("matricula"), equalTo(String(matricula)));
-  const snap = await get(q);
+  const snap = await get(ref(db, "alunos"));
   if (!snap.exists()) return false;
-  return Object.keys(snap.val()).some((id) => id !== ignorarId);
+  let existe = false;
+  snap.forEach((item) => {
+    if (String(item.val().matricula) === String(matricula) && item.key !== ignorarId) {
+      existe = true;
+    }
+  });
+  return existe;
 }
 
 function validarAluno(dados) {
