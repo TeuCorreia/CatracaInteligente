@@ -58,6 +58,13 @@ projeto/
     └── facial-recognition.js  → reconhecimento facial (Anthony)
 ```
 
+## Forma de trabalhar em equipe
+
+A divisão por pessoa continua existindo (cada um com suas áreas de atuação),
+mas a forma de distribuir as tarefas ficou mais flexível: as tarefas vão existir
+na lista/quadro e quem quiser fazer, faz — sem dono fixo, o time se organiza
+diretamente conforme a vontade de cada integrante.
+
 ## O que cada pessoa faz a partir daqui
 
 | Pessoa | Arquivo(s) | Já está pronto | O que falta (TODO) |
@@ -66,20 +73,23 @@ projeto/
 | **Davi** | `js/turmas.js`, `professor.html` | Ler salas do Murilo, criar alocação de turma | Trocar campos de texto livre por selects de disciplina/professor reais |
 | **Isaque** | `js/logs.js`, `aluno.html` | Registrar log de acesso | Implementar listener em tempo real (`escutarTurma`) e exibir disciplina/sala/módulo/andar de verdade |
 | **Emerson** | `js/auth.js` | Verificação básica se aluno existe | Vincular aluno → turma do dia/horário, decidir junto com Davi como isso vai funcionar |
-| **Anthony** | `js/facial-recognition.js` | Estrutura pronta pra receber a implementação | Tudo — pesquisar face-api.js ou serviço Python e integrar |
+| **Anthony** | `js/facial-recognition.js` | Estrutura pronta pra receber a implementação | Integrar o face-api.js (webcam + reconhecimento) e conectar com o fluxo de verificação/log |
 | **Mateus** | Projeto como um todo | — | Acompanhar todo mundo, revisar PRs/commits, manter o README atualizado, cuidar da coerência entre as partes |
-| **Gabriel** | Cadastro facial / integração com o modelo | — | Parte 2: cadastro facial dos alunos e apoio na integração do reconhecimento (YOLO/face-api.js) |
+| **Gabriel** | Cadastro facial / integração com o modelo | — | Parte 2: cadastro facial dos alunos (descritores em `alunos/{id}/faceDescriptor`) e apoio na integração com o face-api.js |
 
 ## Parte 2 — Reconhecimento Facial na Catraca
 
 Objetivo: substituir a matrícula digitada manualmente em `aluno.html` pelo
 reconhecimento facial do aluno, usando uma biblioteca/serviço dedicado.
 
-### Decisão técnica (a definir em grupo)
+Com a decisão tomada de usar o **face-api.js**, o caminho atual é o fluxo
+100% web — câmera no navegador, sem backend Python.
 
-- **face-api.js** (recomendado para este projeto): roda 100% no navegador,
-  integra direto com o front web atual, sem backend extra. Substitui a matrícula
-  manual pelo reconhecimento ao abrir a webcam.
+### Decisão técnica (definida: face-api.js)
+
+- **face-api.js** — **decisão atual: o Face API será utilizado**. Roda 100% no
+  navegador, integra direto com o front web atual, sem backend extra.
+  Substitui a matrícula manual pelo reconhecimento ao abrir a webcam.
 - **YOLO / serviço Python** (OpenCV, face_recognition): mais robusto para
   produção, mas exige FastAPI/Flask rodando e uma rota `POST /reconhecer`
   que devolva `{ matricula }`.
@@ -92,7 +102,7 @@ projeto/
 └── js/
     └── facial-recognition.js → implementa reconhecerRosto() (Anthony)
 
-# Se escolher Python:
+# Alternativa (ainda em avaliação): YOLO / serviço Python
 backend/
 ├── main.py                  → API /reconhecer (Gabriel)
 └── cadastro_facial/         → fotos de referência por matrícula
@@ -103,7 +113,7 @@ backend/
 | Pessoa | Tarefa |
 |---|---|
 | **Anthony** | Implementar `reconhecerRosto()` em `js/facial-recognition.js` (webcam + face-api.js) |
-| **Gabriel** | Cadastro facial dos alunos (fotos → descritores salvos em `alunos/{id}/faceDescriptor`) e/ou endpoint do serviço Python |
+| **Gabriel** | Cadastro facial dos alunos (fotos → descritores salvos em `alunos/{id}/faceDescriptor`) e integração com o face-api.js |
 | **Isaque** | Integrar o resultado do reconhecimento na tela `aluno.html` (chamar `verificarAcesso(matricula)` com a matrícula detectada) |
 | **Emerson** | Garantir que `verificarAcesso` retorne `matricula` reconhecida → log com `status` correto |
 | **Davi** | Validar o fluxo: professor aloca turma e o aluno só entra se estiver ativo |
