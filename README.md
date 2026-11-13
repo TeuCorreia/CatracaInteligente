@@ -139,3 +139,49 @@ Murilo (salas) → Davi (turmas usam salas) → Emerson (auth usa turmas) → Is
 Ou seja: dá pra todo mundo trabalhar em paralelo desde já, porque cada parte
 já tem uma versão "rascunho" funcionando (dados fake/manuais) — vocês vão
 substituindo aos poucos pela versão de verdade.
+
+## Estrutura atual (login, salas automáticas e prédio 3D)
+
+**Logins de demonstração** (`js/guard.js`, só no navegador — não é segurança real):
+`admin / admin123` (aloca professores e administra tudo) e `professor / prof123` (somente leitura: vê onde dá aula no prédio 3D, suas turmas e a catraca).
+
+```
+login.html, index.html          → entrada e menu por perfil
+admin-salas.html                → cadastro de salas (só a capacidade; número/andar/módulo automáticos)
+planta3d.html                   → prédio 3D (por fora / translúcido / por andar) + reservas
+css/   style.css (base e temas), admin-salas.css, predio3d.css
+js/
+├── theme.js, guard.js, util.js → tema claro/escuro, login por perfil, utilitários
+├── salas.js, reservas.js       → salas (Firebase + numeração automática) e aulas reservadas
+├── admin-salas.js              → tela de cadastro de salas
+└── predio3d/                   → app (estado/interação), predio (geometria), cena, painel,
+                                  mobilia, pessoas, recursos (materiais e lotes), config
+```
+Numeração: cada andar comporta 10 salas (101–110, 201–210…); ao encher, nasce um andar novo.
+
+## Turmas, alunos e conflitos (base do reconhecimento facial com ESP32)
+
+**Logins:** `admin / admin123` · professor cadastrado: **e-mail** + `prof123` · aluno cadastrado: **matrícula** + `aluno123`
+(senhas fixas só de demonstração; em produção use Firebase Auth).
+
+**Modelo** (cada aluno ↔ turma ↔ aula):
+```
+alunos/{alunoId}                      = { nome, matricula, faceId, ativo }
+disciplinas/{discId}                  = { nome, professorId, alunoIds: [alunoId...] }   ← a TURMA (fonte da verdade)
+alunos_disciplinas/{alunoId}/{discId} = true                                             ← ÍNDICE derivado (para o ESP32)
+turmas/{turmaId}                      = { disciplinaId, salaId, data, horario, horarioFim, professorId, ... }   ← uma AULA marcada
+```
+- Quem **aloca** é o administrador: no prédio 3D ele escolhe a sala, o **professor**, a **turma dele** (ou "sem turma"), o assunto e o horário; os alunos da turma ficam ligados à aula. O professor só visualiza ("Suas aulas", ★ na sala, planta 2D).
+- **Conflitos** (`js/conflitos.js`): a reserva é recusada se o professor ou algum aluno da turma já tem outra aula no mesmo horário; a tela **Turmas e conflitos** (`minhas-turmas.html`) lista os choques e o admin corrige (mudar horário/sala ou liberar a aula).
+- O índice `alunos_disciplinas` é gravado junto com cada turma (`js/disciplinas.js`) e pode ser conferido/reconstruído em **Turmas e conflitos → Vínculos para a catraca**.
+
+**Como o ESP32 deve decidir a entrada** (mesma lógica de `aulaDoAlunoAgora` em `js/academico.js`, usada por `js/auth.js`):
+1. aluno reconhecido → `GET <DATABASE_URL>/alunos.json?orderBy="faceId"&equalTo="<faceId>"` (ou por `matricula`) → `alunoId`, `ativo`
+2. `GET <DATABASE_URL>/alunos_disciplinas/<alunoId>.json` → ids das turmas do aluno
+3. `GET <DATABASE_URL>/turmas.json?orderBy="data"&equalTo="AAAA-MM-DD"` → aulas de hoje; ficar com as de `disciplinaId` ∈ passo 2 e comparar `horario`/`horarioFim` com a hora atual (aceita-se chegar até 30 min antes)
+
+Regras recomendadas (Firebase → Realtime Database → Regras), senão as consultas `orderBy` são recusadas:
+```json
+{ "rules": { "alunos": { ".indexOn": ["matricula", "faceId"] }, "turmas": { ".indexOn": ["data"] } } }
+```
+(mantenha as demais regras; o site faz fallback sem o índice, mas o firmware deve usá-lo.)

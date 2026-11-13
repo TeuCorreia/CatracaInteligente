@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Prédio 3D — Catraca Inteligente</title>
+<link rel="stylesheet" href="css/predio3d.css" />
+<script src="js/theme.js"></script>
+<script src="js/guard.js" data-papeis="admin,professor"></script>
+<script type="importmap">
+{ "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+  <div id="cena"></div>
+  <div id="labels"></div>
+
+  <div id="topo">
+    <div class="glass marca">
+      <a href="index.html">← Menu</a>
+      <div>Prédio 3D<span class="s" id="stats" role="status">carregando…</span></div>
+      <span class="usuario"><span id="usuario"></span> · <button type="button" id="sair" class="texto">Sair</button></span>
+    </div>
+    <div class="glass barra">
+      <span id="modos" role="group" aria-label="Modo de visualização"></span>
+      <label class="campo-barra">Data <input type="date" id="data" aria-label="Data das aulas" /></label>
+      <label class="campo-barra">Horário
+        <input type="time" id="ini" aria-label="Início do horário (opcional)" /> –
+        <input type="time" id="fim" aria-label="Fim do horário (opcional)" />
+        <button type="button" id="limpar-horario" class="texto" title="Limpar horário (ver o dia todo)" aria-label="Limpar horário">✕</button>
+      </label>
+      <a class="novo" id="nova-sala" href="admin-salas.html" hidden>＋ Nova sala</a>
+    </div>
+  </div>
+
+  <section id="planta2d" class="glass" hidden aria-label="Planta 2D dos andares"></section>
+  <aside id="painel" class="glass" aria-label="Detalhes e reserva de sala"></aside>
+  <div id="legenda" class="glass"></div>
+  <div id="dica" class="glass">Arraste: girar · Botão direito: mover · Scroll: zoom · Clique numa sala · Esc: fechar</div>
+  <div id="vazio" class="glass" hidden>
+    <div class="grande">🏗️</div><h2>Nenhuma sala cadastrada</h2>
+    <p class="sub" id="vazio-txt"></p><a id="vazio-link" href="admin-salas.html" hidden>Cadastrar primeira sala</a>
+  </div>
+  <div id="toast" class="glass" role="status"></div>
+
+  <script type="module" src="js/predio3d/app.js"></script>
+</body>
+</html>

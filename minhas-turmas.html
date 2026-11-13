@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Minhas turmas — Catraca Inteligente</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/turmas.css" />
+<script src="js/theme.js"></script>
+<script src="js/guard.js" data-papeis="admin,professor"></script>
+</head>
+<body>
+  <header>
+    <h1 id="titulo">Minhas turmas</h1>
+    <nav><a href="index.html">← Voltar</a> <a href="planta3d.html">Prédio 3D</a></nav>
+  </header>
+
+  <main class="larga">
+    <div class="resumo" id="resumo" aria-live="polite"></div>
+
+    <div class="card filtro" id="filtro" hidden>
+      <div>
+        <label for="f-professor">Professor</label>
+        <select id="f-professor"></select>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Conflitos de horário</h2>
+      <p class="dica">Aulas marcadas, de hoje em diante, em que o mesmo professor ou o mesmo aluno está em dois lugares ao mesmo tempo.</p>
+      <div id="conflitos">Carregando...</div>
+    </div>
+
+    <div class="card">
+      <h2>Turmas e alunos</h2>
+      <div id="turmas">Carregando...</div>
+    </div>
+
+    <div class="card vinculos" id="vinculos" hidden></div>
+  </main>
+
+  <script type="module" src="js/minhas-turmas.js"></script>
+</body>
+</html>

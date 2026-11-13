@@ -1,6 +1,7 @@
 // ============================================================
 // ALUNOS — cadastro, listagem, edição e remoção de alunos
 // ============================================================
+import { desvincularAluno } from "./academico.js";
 
 import { db } from "./firebase-config.js";
 import {
@@ -38,8 +39,9 @@ export function atualizarAluno(alunoId, dadosNovos) {
   });
 }
 
-export function removerAluno(alunoId) {
-  return remove(ref(db, `alunos/${alunoId}`));
+export async function removerAluno(alunoId) {
+  await remove(ref(db, `alunos/${alunoId}`));
+  await desvincularAluno(alunoId);   // tira o aluno das turmas e do índice (evita matrícula "fantasma")
 }
 
 export async function matriculaExiste(matricula, ignorarId = null) {

@@ -3,42 +3,125 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Catraca Inteligente</title>
+<title>Painel — Catraca Inteligente</title>
+<meta name="description" content="Reserve salas e acompanhe a ocupação do prédio em tempo real." />
 <link rel="stylesheet" href="css/style.css" />
+<script src="js/theme.js"></script>
+<script src="js/guard.js"></script>
+<style>
+  [hidden] { display: none !important; }   /* .cartao usa display:flex, que sobrescrevia o atributo hidden */
+  main { max-width: 1040px; }
+  .marca { font-family: var(--font-display); font-size: 18px; font-weight: 500; letter-spacing: var(--tracking-display); margin: 0; }
+  .sessao { display: flex; align-items: center; gap: var(--s-3); font-size: var(--t-small); color: var(--c-muted); }
+  .sessao button { width: auto; min-height: 36px; margin: 0; padding: 0 var(--s-3); }
+
+  .intro { margin-bottom: var(--s-7); }
+  .perfil { display: inline-block; margin: 0 0 var(--s-3); font-size: var(--t-label); font-weight: 500; color: var(--c-muted); }
+  .intro h1 { font-size: var(--t-h1); max-width: 22ch; margin-bottom: var(--s-3); }
+  .intro p { font-size: 18px; color: var(--c-muted); margin: 0; max-width: 56ch; }
+  .aviso-negado { margin: 0 0 var(--s-5); padding: var(--s-3) var(--s-4); border: 1px solid var(--c-line); border-radius: var(--r-md);
+                  background: color-mix(in srgb, var(--c-err) 8%, var(--c-bg)); color: var(--c-err); font-weight: 500; }
+
+  section + section { margin-top: var(--s-7); }
+  section > h2 { margin-bottom: var(--s-5); }
+  .grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--s-5); }
+
+  /* um único tipo de cartão: superfície, filete, raio grande; sobe 2 px no hover */
+  .cartao {
+    display: flex; flex-direction: column; gap: var(--s-2); min-height: 168px; padding: var(--s-5);
+    color: var(--c-ink); text-decoration: none; background: var(--c-surface);
+    border: 1px solid var(--c-line); border-radius: var(--r-lg);
+    transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  }
+  .cartao:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--c-ink) 30%, transparent); }
+  .cartao b { font-family: var(--font-display); font-weight: 500; font-size: var(--t-h3); letter-spacing: -0.02em; }
+  .cartao span { color: var(--c-muted); }
+  .cartao .ir { margin-top: auto; color: var(--c-action); font-weight: 500; }
+  .cartao .ir::after { content: "→"; display: inline-block; margin-left: 6px; transition: transform var(--dur) var(--ease); }
+  .cartao:hover .ir::after { transform: translateX(3px); }
+  .cartao--principal { grid-column: span 2; }
+  .cartao--principal b { font-size: 22px; }
+  /* o único botão cheio da tela: a ação principal (abrir o prédio) */
+  .cartao--principal .ir {
+    align-self: flex-start; display: inline-flex; align-items: center; min-height: var(--h-ctrl); padding: 0 var(--s-5);
+    color: var(--c-action-ink); background: var(--c-action); border-radius: var(--r-btn);
+  }
+  .cartao--principal:hover .ir { background: var(--c-action-hover); }
+  .etiqueta { align-self: flex-start; font-size: var(--t-label); font-weight: 500; color: var(--c-muted); }
+  @media (max-width: 640px) { .cartao--principal { grid-column: auto; } }
+</style>
 </head>
 <body>
   <header>
-    <h1>Catraca Inteligente — Sistema de Acesso</h1>
-    <nav>
-      <a href="index.html">Início</a>
-      <a href="admin-salas.html">Salas (Murilo)</a>
-      <a href="professor.html">Professor (Davi)</a>
-      <a href="aluno.html">Acesso do Aluno (Isaque)</a>
-    </nav>
+    <p class="marca">Catraca Inteligente</p>
+    <div class="sessao"><span id="usuario-info"></span><button type="button" id="sair" class="secundario">Sair</button></div>
   </header>
 
   <main>
-    <div class="card">
-      <h2>Bem-vindo</h2>
-      <p>Esta é a base do projeto. Cada página abaixo corresponde a uma parte do sistema
-      já dividida entre o grupo. Abra o README.md para ver o que cada um precisa fazer.</p>
+    <p id="aviso-negado" class="aviso-negado" hidden>Seu perfil não tem acesso a essa página.</p>
+
+    <div class="intro">
+      <p class="perfil" id="perfil"></p>
+      <h1>Reserve salas e acompanhe o prédio em tempo real</h1>
+      <p id="boas-vindas">Escolha por onde começar.</p>
     </div>
 
-    <div class="card">
-      <h3>Páginas do sistema</h3>
-      <div class="lista-item"><span>Cadastro de Salas</span><a href="admin-salas.html">Abrir →</a></div>
-      <div class="lista-item"><span>Área do Professor (alocar turma)</span><a href="professor.html">Abrir →</a></div>
-      <div class="lista-item"><span>Área do Aluno (acesso/catraca)</span><a href="aluno.html">Abrir →</a></div>
-      <!-- <div class="lista-item"><span>Popular banco com dados de exemplo (rodar 1x)</span><a href="seed.html">Abrir →</a></div> -->
-      <div class="lista-item"><span>Cadastro de Alunos</span><a href="alunos.html">Abrir →</a></div>
-      <div class="lista-item"><span>Cadastro de Professores</span><a href="professores.html">Abrir →</a></div>
-      <div class="lista-item"><span>Cadastro de Disciplinas</span><a href="disciplinas.html">Abrir →</a></div>
-    </div>
+    <section data-papeis="admin,professor" aria-labelledby="t-salas">
+      <h2 id="t-salas">Salas e aulas</h2>
+      <div class="grade">
+        <a class="cartao cartao--principal" href="planta3d.html">
+          <b>Prédio 3D</b>
+          <span>Veja quais salas estão livres, a planta de cada andar e onde cada aula acontece. O administrador aloca os professores; o professor vê onde dá aula.</span>
+          <span class="ir">Abrir o prédio</span>
+        </a>
+        <a class="cartao" href="professor.html" data-papeis="admin">
+          <b>Alocar turma</b><span>Aloque um professor numa sala: escolha o professor, a turma, a data e o horário.</span><span class="ir">Abrir</span>
+        </a>
+        <a class="cartao" href="minhas-turmas.html" data-papeis="professor">
+          <b>Minhas turmas</b><span>Veja os alunos de cada turma e os choques de horário entre aulas.</span><span class="ir">Abrir</span>
+        </a>
+        <a class="cartao" href="aluno.html">
+          <b>Catraca (teste de acesso)</b><span>Simula a entrada de um aluno pela matrícula.</span><span class="ir">Abrir</span>
+        </a>
+      </div>
+    </section>
 
-    <div class="todo">
-      TODO (Emerson / Mateus): esta página pode virar uma tela de login futuramente
-      (professor x admin x totem), mas por enquanto serve só de menu de navegação.
-    </div>
+    <section data-papeis="aluno" aria-labelledby="t-aluno">
+      <h2 id="t-aluno">Minha rotina</h2>
+      <div class="grade">
+        <a class="cartao cartao--principal" href="minhas-aulas.html">
+          <b>Minhas aulas</b>
+          <span>Suas turmas, as aulas de hoje com a sala e as próximas da semana.</span>
+          <span class="ir">Ver minhas aulas</span>
+        </a>
+      </div>
+    </section>
+
+    <section data-papeis="admin" aria-labelledby="t-admin">
+      <h2 id="t-admin">Administração</h2>
+      <div class="grade">
+        <a class="cartao" href="admin-salas.html"><span class="etiqueta">Só administrador</span><b>Salas</b><span>Cadastre pela capacidade; número e andar são automáticos.</span><span class="ir">Abrir</span></a>
+        <a class="cartao" href="minhas-turmas.html"><span class="etiqueta">Só administrador</span><b>Conflitos de turma</b><span>Encontre choques de horário entre turmas e corrija na hora.</span><span class="ir">Abrir</span></a>
+        <a class="cartao" href="alunos.html"><span class="etiqueta">Só administrador</span><b>Alunos</b><span>Matrículas e situação, ativo ou inativo.</span><span class="ir">Abrir</span></a>
+        <a class="cartao" href="professores.html"><span class="etiqueta">Só administrador</span><b>Professores</b><span>Nome e e-mail dos docentes.</span><span class="ir">Abrir</span></a>
+        <a class="cartao" href="disciplinas.html"><span class="etiqueta">Só administrador</span><b>Disciplinas</b><span>Disciplinas, professores e alunos matriculados.</span><span class="ir">Abrir</span></a>
+      </div>
+    </section>
+    <!-- <a href="seed.html">Popular banco com dados de exemplo (rodar 1x)</a> -->
   </main>
+
+  <script>
+    const s = Sessao.obter();
+    if (s) {
+      document.getElementById("usuario-info").textContent = s.nome;
+      document.getElementById("perfil").textContent = { admin: "Perfil administrador", professor: "Perfil professor", aluno: "Perfil aluno" }[s.papel] ?? "";
+      document.getElementById("boas-vindas").textContent = `Olá, ${s.nome}. Escolha por onde começar.`;
+      document.querySelectorAll("[data-papeis]").forEach((el) => {
+        if (!Sessao.pode(el.dataset.papeis.split(","))) el.hidden = true;
+      });
+    }
+    document.getElementById("sair").addEventListener("click", () => Sessao.sair());
+    if (new URLSearchParams(location.search).has("negado")) document.getElementById("aviso-negado").hidden = false;
+  </script>
 </body>
 </html>
