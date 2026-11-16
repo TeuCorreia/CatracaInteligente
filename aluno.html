@@ -31,6 +31,15 @@
       <button id="btn-verificar">
         Verificar acesso
       </button>
+
+      <hr style="margin:16px 0;opacity:.2;" />
+      <h3>Login facial (face-api.js)</h3>
+      <video id="video-catraca" autoplay playsinline muted style="width:100%;max-width:320px;border-radius:12px;background:#111;display:block;margin:8px 0;"></video>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <button type="button" id="btn-camera-catraca">Iniciar câmera</button>
+        <button type="button" id="btn-facial-catraca">Reconhecer e verificar</button>
+      </div>
+      <p id="status-facial-catraca">Use a câmera para reconhecer um aluno com facial cadastrada.</p>
     </div>
 
     <div class="card" id="resultado" style="display:none;">
@@ -52,78 +61,110 @@
 
   <script type="module">
     import { verificarAcesso } from "./js/auth.js";
-import { escutarTurma } from "./js/logs.js";
+    import { escutarTurma } from "./js/logs.js";
+    import { carregarModelos, iniciarCamera, pararCamera, identificarAlunoPorFace } from "./js/facial-recognition.js";
 
-let pararEscuta = null;
+    let pararEscuta = null;
+    const videoCatraca = document.getElementById("video-catraca");
+    const statusFacial = document.getElementById("status-facial-catraca");
 
-document.getElementById("btn-verificar").addEventListener("click", async () => {
+    async function processarMatricula(matricula) {
+      if (!matricula) return;
 
-  const matricula = document.getElementById("matricula").value.trim();
-
-  if (!matricula) return;
-
-  // Encerra uma escuta anterior
-  if (pararEscuta) {
-    pararEscuta();
-    pararEscuta = null;
-  }
-
-  const resultadoDiv = document.getElementById("resultado");
-  const texto = document.getElementById("texto-resultado");
-  const dadosTurma = document.getElementById("dados-turma");
-
-  resultadoDiv.style.display = "block";
-  dadosTurma.style.display = "none";
-  texto.textContent = "Verificando acesso...";
-
-  try {
-    const resposta = await verificarAcesso(matricula);
-
-    if (!resposta.autorizado) {
-      texto.textContent = `Acesso negado: ${resposta.motivo}`;
-      return;
-    }
-
-    texto.textContent = "Acesso liberado! Aguardando informações da turma...";
-
-    const turmaId = resposta.turma?.id ?? resposta.turmaId;
-
-    if (!turmaId) {
-      texto.textContent = "Acesso liberado, mas nenhuma turma foi vinculada ao aluno.";
-      return;
-    }
-
-    pararEscuta = escutarTurma(turmaId, (turma) => {
-
-      if (!turma) {
-        texto.textContent = "Turma não encontrada.";
-        dadosTurma.style.display = "none";
-        return;
+      if (pararEscuta) {
+        pararEscuta();
+        pararEscuta = null;
       }
 
-      texto.textContent = "Acesso liberado! Informações atualizadas.";
+      const resultadoDiv = document.getElementById("resultado");
+      const texto = document.getElementById("texto-resultado");
+      const dadosTurma = document.getElementById("dados-turma");
 
-      document.getElementById("disciplina").textContent =
-        turma.disciplina ?? "Não informado";
+      resultadoDiv.style.display = "block";
+      dadosTurma.style.display = "none";
+      texto.textContent = "Verificando acesso...";
 
-      document.getElementById("sala").textContent =
-        turma.sala ?? "Não informado";
+      try {
+        const resposta = await verificarAcesso(matricula);
 
-      document.getElementById("modulo").textContent =
-        turma.modulo ?? "Não informado";
+        if (!resposta.autorizado) {
+          texto.textContent = `Acesso negado: ${resposta.motivo}`;
+          return;
+        }
 
-      document.getElementById("andar").textContent =
-        turma.andar ?? "Não informado";
+        texto.textContent = "Acesso liberado! Aguardando informações da turma...";
 
-      dadosTurma.style.display = "block";
+        const turmaId = resposta.turma?.id ?? resposta.turmaId;
+
+        if (!turmaId) {
+          texto.textContent = "Acesso liberado, mas nenhuma turma foi vinculada ao aluno.";
+          return;
+        }
+
+        pararEscuta = escutarTurma(turmaId, (turma) => {
+          if (!turma) {
+            texto.textContent = "Turma não encontrada.";
+            dadosTurma.style.display = "none";
+            return;
+          }
+
+          texto.textContent = "Acesso liberado! Informações atualizadas.";
+
+          document.getElementById("disciplina").textContent = turma.disciplina ?? "Não informado";
+          document.getElementById("sala").textContent = turma.sala ?? "Não informado";
+          document.getElementById("modulo").textContent = turma.modulo ?? "Não informado";
+          document.getElementById("andar").textContent = turma.andar ?? "Não informado";
+
+          dadosTurma.style.display = "block";
+        });
+      } catch (erro) {
+        console.error(erro);
+        texto.textContent = "Erro ao verificar acesso. Tente novamente.";
+      }
+    }
+
+    document.getElementById("btn-verificar").addEventListener("click", async () => {
+      const matricula = document.getElementById("matricula").value.trim();
+      if (!matricula) return;
+      await processarMatricula(matricula);
     });
 
-  } catch (erro) {
-    console.error(erro);
-    texto.textContent = "Erro ao verificar acesso. Tente novamente.";
-  }
-});
+    document.getElementById("btn-camera-catraca").addEventListener("click", async () => {
+      try {
+        statusFacial.textContent = "Carregando modelos e iniciando câmera...";
+        await carregarModelos();
+        await iniciarCamera(videoCatraca);
+        statusFacial.textContent = "Câmera ativa. Clique em “Reconhecer e verificar”.";
+      } catch (erro) {
+        console.error(erro);
+        statusFacial.textContent = "Erro ao iniciar câmera/modelos: " + erro.message;
+      }
+    });
 
+    document.getElementById("btn-facial-catraca").addEventListener("click", async () => {
+      try {
+        statusFacial.textContent = "Reconhecendo rosto...";
+        const resultado = await identificarAlunoPorFace(videoCatraca);
+        if (!resultado.encontrado) {
+          statusFacial.textContent = resultado.motivo || "Rosto não reconhecido.";
+          return;
+        }
+        const aluno = resultado.aluno || {};
+        const matricula = String(aluno.matricula || "").trim();
+        if (!matricula) {
+          statusFacial.textContent = "Aluno reconhecido sem matrícula cadastrada.";
+          return;
+        }
+        document.getElementById("matricula").value = matricula;
+        statusFacial.textContent = `Reconhecido: ${aluno.nome || "Aluno"} (matrícula ${matricula}). Verificando acesso...`;
+        await processarMatricula(matricula);
+      } catch (erro) {
+        console.error(erro);
+        statusFacial.textContent = "Erro no reconhecimento facial: " + erro.message;
+      }
+    });
+
+    window.addEventListener("beforeunload", () => pararCamera(videoCatraca));
   </script>
 </body>
 </html>

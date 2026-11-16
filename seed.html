@@ -43,8 +43,8 @@
 
         const prof1 = await push(ref(db, "professores"), { nome: "Prof. Ana", email: "ana@escola.com" });
 
-        const aluno1 = await push(ref(db, "alunos"), { nome: "João Silva", matricula: "2024001", faceId: null, ativo: true });
-        const aluno2 = await push(ref(db, "alunos"), { nome: "Maria Souza", matricula: "2024002", faceId: null, ativo: true });
+        const aluno1 = await push(ref(db, "alunos"), { nome: "João Silva", matricula: "2024001", faceId: null, faceDescriptor: null, ativo: true });
+        const aluno2 = await push(ref(db, "alunos"), { nome: "Maria Souza", matricula: "2024002", faceId: null, faceDescriptor: null, ativo: true });
 
         const disc1 = await push(ref(db, "disciplinas"), {
           nome: "Programação Web",

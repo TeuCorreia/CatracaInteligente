@@ -13,12 +13,13 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-export function criarAluno({ nome, matricula }) {
+export function criarAluno({ nome, matricula, faceDescriptor = null }) {
   validarAluno({ nome, matricula });
   return push(ref(db, "alunos"), {
     nome: nome.trim(),
     matricula: String(matricula).trim(),
     faceId: null,
+    faceDescriptor: Array.isArray(faceDescriptor) ? faceDescriptor : null,
     ativo: true,
   });
 }
@@ -32,11 +33,15 @@ export function escutarAlunos(callback) {
 
 export function atualizarAluno(alunoId, dadosNovos) {
   validarAluno(dadosNovos);
-  return update(ref(db, `alunos/${alunoId}`), {
+  const payload = {
     nome: dadosNovos.nome.trim(),
     matricula: String(dadosNovos.matricula).trim(),
     ativo: Boolean(dadosNovos.ativo),
-  });
+  };
+  if (Object.prototype.hasOwnProperty.call(dadosNovos, "faceDescriptor")) {
+    payload.faceDescriptor = Array.isArray(dadosNovos.faceDescriptor) ? dadosNovos.faceDescriptor : null;
+  }
+  return update(ref(db, `alunos/${alunoId}`), payload);
 }
 
 export async function removerAluno(alunoId) {

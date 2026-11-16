@@ -23,9 +23,10 @@ export const db = getDatabase(app);
 // ESTRUTURA DO BANCO (combinada pelo grupo — não mudar sem avisar todo mundo)
 // ------------------------------------------------------------
 // salas/            { salaId: { numero, modulo, andar, capacidade, disponivel } }
-// alunos/           { alunoId: { nome, matricula, faceId, ativo } }
-// professores/      { professorId: { nome, email } }
-// disciplinas/      { disciplinaId: { nome, professorId } }
-// turmas/           { turmaId: { disciplinaId, professorId, salaId, data, horario } }
+// alunos/           { alunoId: { nome, matricula, faceId, faceDescriptor, ativo } }
+// professores/      { professorId: { nome, email, faceDescriptor } }
+// disciplinas/      { disciplinaId: { nome, professorId, alunoIds } }
+// turmas/           { turmaId: { disciplinaId, professorId, professorNome, salaId, data, horario, horarioFim, disciplina/curso, assunto, criadoPor } }
+// alunos_disciplinas/{ alunoId: { disciplinaId: true } }
 // logs_acesso/      { logId: { alunoId, turmaId, timestamp, status } }
 // ------------------------------------------------------------
