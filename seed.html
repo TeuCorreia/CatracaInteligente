@@ -1,11 +1,12 @@
-<!-- SEED — popula o Firebase com dados de exemplo (rodar uma vez)
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Seed — Dados de exemplo</title>
-<link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seed — Dados de exemplo</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/theme.js"></script>
+  <script src="js/guard.js" data-livre></script>
 </head>
 <body>
   <header>
@@ -16,8 +17,8 @@
   <main>
     <div class="card">
       <h2>Popular o banco</h2>
-      <p>Clique para cadastrar salas, professores, disciplinas, alunos e uma turma de hoje.
-      Os alunos cadastrados são: matrículas <strong>2024001</strong> e <strong>2024002</strong>.</p>
+      <p>Clique para cadastrar dados mínimos e consistentes no Firebase (salas, professor, alunos, disciplina, vínculo e uma aula de hoje).</p>
+      <p>Logins de cadastro criados: aluno <strong>2024001</strong> ou <strong>2024002</strong> (senha <code>aluno123</code>) · professor <strong>ana@escola.com</strong> (senha <code>prof123</code>). Demos: <code>admin/admin123</code>, <code>professor/prof123</code>.</p>
       <button id="btn-seed">Popular banco</button>
       <p id="status"></p>
     </div>
@@ -25,10 +26,12 @@
 
   <script type="module">
     import { db } from "./js/firebase-config.js";
-    import { ref, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { ref, push, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     document.getElementById("btn-seed").addEventListener("click", async () => {
       const status = document.getElementById("status");
+      const botao = document.getElementById("btn-seed");
+      botao.disabled = true;
       status.textContent = "Gravando...";
 
       const d = new Date();
@@ -36,28 +39,46 @@
 
       try {
         const sala1 = await push(ref(db, "salas"), { numero: "101", modulo: "A", andar: 1, capacidade: 40, disponivel: true });
-        await push(ref(db, "salas"), { numero: "202", modulo: "B", andar: 2, capacidade: 30, disponivel: true });
+        await push(ref(db, "salas"), { numero: "202", modulo: "A", andar: 2, capacidade: 30, disponivel: true });
 
         const prof1 = await push(ref(db, "professores"), { nome: "Prof. Ana", email: "ana@escola.com" });
 
-        const disc1 = await push(ref(db, "disciplinas"), { nome: "Programação Web", professorId: prof1.key });
+        const aluno1 = await push(ref(db, "alunos"), { nome: "João Silva", matricula: "2024001", faceId: null, ativo: true });
+        const aluno2 = await push(ref(db, "alunos"), { nome: "Maria Souza", matricula: "2024002", faceId: null, ativo: true });
 
-        await push(ref(db, "alunos"), { nome: "João Silva", matricula: "2024001", faceId: null, ativo: true });
-        await push(ref(db, "alunos"), { nome: "Maria Souza", matricula: "2024002", faceId: null, ativo: true });
+        const disc1 = await push(ref(db, "disciplinas"), {
+          nome: "Programação Web",
+          professorId: prof1.key,
+          alunoIds: [aluno1.key, aluno2.key],
+        });
+
+        await update(ref(db), {
+          [`alunos_disciplinas/${aluno1.key}/${disc1.key}`]: true,
+          [`alunos_disciplinas/${aluno2.key}/${disc1.key}`]: true,
+        });
 
         await push(ref(db, "turmas"), {
           disciplina: "Programação Web",
+          curso: "Programação Web",
+          assunto: "Aula inicial",
+          disciplinaId: disc1.key,
           professorId: prof1.key,
+          professorNome: "Prof. Ana",
           salaId: sala1.key,
           data: hoje,
-          horario: "19:00",
+          horario: "00:00",
+          horarioFim: "23:59",
+          criadoPor: "seed",
         });
 
-        status.textContent = "Banco populado com sucesso! Você já pode usar o aluno (matrícula 2024001).";
+        status.textContent = "Banco populado com sucesso. Teste: aluno 2024001 (aluno123), professor ana@escola.com (prof123) ou admin/admin123. A aula de hoje foi criada das 00:00 às 23:59 para facilitar o teste.";
       } catch (erro) {
-        status.textContent = "Erro: " + erro.message;
+        console.error(erro);
+        status.textContent = "Erro: " + (erro?.message || erro) + ". Verifique a databaseURL em js/firebase-config.js e as regras de acesso do Realtime Database.";
+      } finally {
+        botao.disabled = false;
       }
     });
   </script>
 </body>
-</html> -->
+</html>

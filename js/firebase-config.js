@@ -6,6 +6,8 @@ import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.2/firebase
 const firebaseConfig = {
   apiKey: "AIzaSyBYcX_RDv_KXVUhnlZ2pDz-f7cPE4pAkzo",
   authDomain: "catraca-inteligente-b90fe.firebaseapp.com",
+  // URL do Realtime Database (ajuste no Console do Firebase se o seu banco usar outra região/URL)
+  databaseURL: "https://catraca-inteligente-b90fe-default-rtdb.firebaseio.com",
   projectId: "catraca-inteligente-b90fe",
   storageBucket: "catraca-inteligente-b90fe.firebasestorage.app",
   messagingSenderId: "985826306190",
