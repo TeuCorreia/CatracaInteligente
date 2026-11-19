@@ -15,16 +15,19 @@ import { RW, RD, COR, PAD, FH, WH, T, SALA_L, SALA_P, CORES_MODULO, porNumero } 
 import { mat, matStatus, matSelecao, geo, geoCaixa, geoArestas, matAresta, Lote, Pincel, OPC, matrizPosRot } from "./recursos.js";
 import { criarPessoa } from "./pessoas.js";
 import { mobiliar } from "./mobilia.js";
+import { detalharEntorno, brises } from "./detalhes.js";
 
 const matriz = (x, y, z) => new THREE.Matrix4().makeTranslation(x, y, z);
 
 // ---------- fachada de um andar ----------
-function fachada(lote, W, D) {
+function fachada(lote, W, D, terreo) {
   const lado = (comprimento, x, z, rot) => {
     const p = new Pincel(lote, matrizPosRot(x, z, rot));
     p.caixa(comprimento, .9, .14, mat.fachada, 0, .45, 0, OPC.casco);               // peitoril
     p.caixa(comprimento, .4, .14, mat.fachada, 0, WH - .2, 0, OPC.casco);            // verga
     p.caixa(comprimento, WH - 1.3, .05, mat.vidro, 0, .9 + (WH - 1.3) / 2, 0, OPC.translucido);
+    p.caixa(comprimento, .05, .09, mat.estrutura, 0, .9 + (WH - 1.3) * .62, 0, OPC.casco);   // travessa do caixilho
+    p.caixa(comprimento + .1, .06, .3, mat.estrutura, 0, .92, .1, OPC.casco);                 // pingadeira do peitoril
     const vaos = Math.max(2, Math.round(comprimento / RW));
     for (let i = 0; i <= vaos; i++) p.caixa(.1, WH, .18, mat.estrutura, -comprimento / 2 + (comprimento / vaos) * i, WH / 2, 0, OPC.casco);
   };
@@ -32,6 +35,7 @@ function fachada(lote, W, D) {
   lado(D, W / 2, 0, Math.PI / 2); lado(D, -W / 2, 0, Math.PI / 2);
   const cantos = new Pincel(lote);
   for (const a of [-1, 1]) for (const b of [-1, 1]) cantos.caixa(.34, WH, .34, mat.estrutura, a * W / 2, WH / 2, b * D / 2, OPC.casco);
+  brises(cantos, W, D, WH, terreo);
 }
 
 function entrada(p, D) {
@@ -45,6 +49,12 @@ function entrada(p, D) {
   for (const x of [-.52, .52]) {
     p.caixa(.95, 2.2, .04, mat.vidro, x, 1.15, D / 2 + .04, OPC.translucido);
     p.caixa(.04, .5, .06, mat.metal, x + (x < 0 ? .38 : -.38), 1.1, D / 2 + .1, OPC.mobilia);   // puxadores
+  }
+  p.caixa(4.0, .03, .16, mat.luzTeto, 0, 2.655, D / 2 + 1.0, OPC.mobilia);           // luz sob a marquise
+  p.caixa(4.4, .2, .04, mat.faixa, 0, 2.75, D / 2 + 2.1, OPC.casco);                 // testeira azul da marquise
+  for (const x of [-2.95, 2.95]) {                                                   // vasos grandes ao lado da porta
+    p.caixa(.7, .62, .7, mat.vaso, x, .31, D / 2 + 1.05, OPC.casco);
+    p.forma(geo.folhagemVaso, mat.planta, new THREE.Matrix4().makeScale(1.4, 1.6, 1.4).setPosition(x, -.45, D / 2 + 1.05), OPC.mobilia);
   }
 }
 
@@ -60,6 +70,7 @@ function criarSala(pred, fl, sala, { cx, cz, rot }, lotes) {
   w(-(porta / 2 + trecho / 2), WH / 2, SALA_P / 2 - e / 2, trecho, WH, e);
   w(porta / 2 + trecho / 2, WH / 2, SALA_P / 2 - e / 2, trecho, WH, e);
   w(0, WH - .45, SALA_P / 2 - e / 2, porta, .9, e);
+  for (const z of [-.8, .8]) parede.caixa(1.5, .05, .32, mat.luzTeto, 0, WH - .05, z, OPC.translucido);   // luminárias da sala
   lotes.paredes.add(geoArestas(SALA_L, WH, SALA_P), matAresta(pred.corDe(sala.modulo)),
     matriz(0, WH / 2, 0).premultiply(base), OPC.translucido);                        // contorno colorido do módulo
 
@@ -107,7 +118,9 @@ function criarAndar(pred, idx, andar, salas, { W, D, colunas }) {
     p.forma(geo.folhagemVaso, mat.planta, matriz(x, 0, lado * .8), OPC.mobilia);
   }
   if (idx === 0) entrada(p, D);
-  fachada(lotes.fachada, W, D);
+  fachada(lotes.fachada, W, D, idx === 0);
+  const teto = new Pincel(lotes.paredes);                                                          // luminárias do corredor
+  for (let x = -W / 2 + PAD + 2.2; x < W / 2 - PAD - 1; x += 2.2) teto.caixa(.95, .05, .3, mat.luzTeto, x, WH - .05, 0, OPC.translucido);
 
   salas.forEach((sala, i) => {                // ordem no corredor: pares/ímpares em lados opostos
     const frente = i % 2 === 0;
@@ -157,12 +170,25 @@ function criarTelhado(W, D, H, colunas) {
       p.caixa(.05, .45, .05, mat.metal, x, .22, z + .3, c);
     }
   }
+  // guarda-corpo sobre a platibanda, claraboia, casa de máquinas e antena com luz de sinalização
+  for (const s of [-1, 1]) {
+    p.caixa(Wt, .04, .04, mat.metal, 0, 1.05, s * (Dt / 2 - .1), c);
+    p.caixa(.04, .04, Dt, mat.metal, s * (Wt / 2 - .1), 1.05, 0, c);
+  }
+  for (let x = -Wt / 2 + .1; x <= Wt / 2; x += 1.6) for (const s of [-1, 1]) p.caixa(.04, .45, .04, mat.metal, x, .82, s * (Dt / 2 - .1), c);
+  p.caixa(2.6, .3, 1.5, mat.estrutura, 0, .15, -.4, c);
+  p.caixa(2.4, .22, 1.3, mat.vidro, 0, .41, -.4, OPC.translucido);
+  p.caixa(1.8, 1.5, 1.6, mat.fachada, -W / 2 + 1.6, .75, -D / 2 + 1.5, c);
+  p.caixa(.6, 1.0, .05, mat.estrutura, -W / 2 + 1.6, .55, -D / 2 + 2.32, c);
+  p.forma(geo.antena, mat.metal, matriz(-W / 2 + 1.6, 1.5, -D / 2 + 1.5), c);
+  p.forma(geo.bolinha, mat.antena, matriz(-W / 2 + 1.6, 4.55, -D / 2 + 1.5), OPC.mobilia);
   lote.construir(grp);
   return grp;
 }
 
 function criarEntorno(W, D) {
   const grp = new THREE.Group(), lote = new Lote(), p = new Pincel(lote), chao = OPC.mobilia;
+  const animados = detalharEntorno(p, grp, W, D);   // portão com catracas, rua, carros, estacionamento, nuvens…
   p.caixa(W + 9, .06, D + 9, mat.praca, 0, -.6, 0, chao);                                   // praça
   p.caixa(3.4, .07, 30, mat.caminho, 0, -.6, D / 2 + 4.5 + 15, chao);                        // caminho até a entrada
   for (const a of [-1, 1]) for (const b of [-1, 1]) {                                        // postes
@@ -174,7 +200,7 @@ function criarEntorno(W, D) {
   for (let i = 0; i < 44; i++) {                                                             // árvores (posição determinística)
     const ang = i * 2.399, k = 3 + ((i * 7) % 9), tam = .8 + ((i * 13) % 7) / 10;
     pos.set(Math.cos(ang) * (W / 2 + 5 + k), -.62, Math.sin(ang) * (D / 2 + 5 + k));
-    if (Math.abs(pos.x) < 3 && pos.z > 0) continue;                                          // não bloqueia o caminho
+    if (!animados.zonaLivre(pos.x, pos.z)) continue;                                         // não bloqueia caminho, estacionamento e rua
     m.compose(pos, q.setFromAxisAngle(eixoY, i * 1.3), esc.setScalar(tam));
     const folha = mat.folhas[i % mat.folhas.length];
     if (i % 3 === 0) {                                                                        // conífera
@@ -205,7 +231,7 @@ function criarEntorno(W, D) {
     }
   }
   lote.construir(grp);
-  return grp;
+  return { grp, animados };
 }
 
 // ---------- API ----------
@@ -224,8 +250,9 @@ export function criarPredio(salas) {
   const colunas = Math.max(3, Math.ceil(maiorAndar / 2));
   const W = colunas * RW + 2 * PAD, D = 2 * RD + COR + 2 * PAD, H = Math.max(1, andares.length) * FH;
 
+  const entorno = criarEntorno(W, D);
   const pred = {
-    raiz: new THREE.Group(), entorno: criarEntorno(W, D), pisos: [], salas: [], pickSalas: [], pickPredio: [], andarilhos: [],
+    raiz: new THREE.Group(), entorno: entorno.grp, animados: entorno.animados, pisos: [], salas: [], pickSalas: [], pickPredio: [], andarilhos: [],
     andares, modulos, corDe: (m) => CORES_MODULO[modulos.indexOf(m) % CORES_MODULO.length],
     medidas: { W, D, H }, colunas, telhado: null, placa: null,
   };

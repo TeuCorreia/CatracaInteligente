@@ -18,6 +18,7 @@ import { matStatus, COR_STATUS, mat, definirOpacidadeArestas } from "./recursos.
 import { criarPessoa, balancar } from "./pessoas.js";
 import { criarCena } from "./cena.js";
 import { criarPredio, descartarPredio } from "./predio.js";
+import { animarDetalhes } from "./detalhes.js";
 import { criarPainel } from "./painel.js";
 
 const $ = (seletor) => document.querySelector(seletor);
@@ -292,6 +293,7 @@ $("#planta2d").addEventListener("click", (e) => {
 function escreverVisual() {
   mat.parede.opacity = visual.parede; mat.parede.depthWrite = visual.parede > .85;
   mat.fachada.opacity = visual.fach; mat.fachada.depthWrite = visual.fach > .85;
+  mat.brise.opacity = visual.fach; mat.brise.depthWrite = visual.fach > .85;   // brises somem junto com a fachada
   mat.vidro.opacity = visual.vidro;
   definirOpacidadeArestas(visual.aresta);
 }
@@ -558,6 +560,7 @@ function animar() {
     }
 
     if (!reduzirMovimento) {
+      animarDetalhes(pred.animados, dt);          // carros na rua e nuvens
       for (const p of pred.andarilhos) {
         if (!p.fl.grp.visible) continue;
         p.x += p.dir * p.vel * dt;

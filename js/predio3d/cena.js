@@ -88,6 +88,12 @@ export function criarCena(contenedor, elementoRotulos) {
       mat.luz.emissiveIntensity = escuro ? 1.8 : 0.2;
       mat.vidro.emissive.set(escuro ? 0xffd98a : 0x000000);
       mat.vidro.emissiveIntensity = escuro ? 0.18 : 0;
+      // detalhes: luminárias, faróis/lanternas e nuvens mudam com a noite
+      mat.luzTeto.emissiveIntensity = escuro ? 1.5 : 0.25;
+      mat.lanterna.emissiveIntensity = escuro ? 1.6 : 0.4;
+      mat.antena.emissiveIntensity = escuro ? 2.2 : 0.8;
+      mat.catraca.emissiveIntensity = escuro ? 1.6 : 0.9;
+      mat.nuvem.color.set(escuro ? 0x2c3654 : 0xffffff);
     },
 
     redimensionar() {
