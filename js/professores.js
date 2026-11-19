@@ -30,6 +30,10 @@ export function removerProfessor(professorId) {
 }
 
 function validarProfessor(dados) {
-  if (!String(dados.nome ?? "").trim()) throw new Error("Preencha o nome do professor.");
-  if (!String(dados.email ?? "").trim()) throw new Error("Preencha o e-mail do professor.");
+  const nome = String(dados.nome ?? "").trim();
+  const email = String(dados.email ?? "").trim();
+  if (!nome || nome.length > 120) throw new Error("Informe o nome do professor (até 120 caracteres).");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+    throw new Error("Informe um e-mail válido.");
+  }
 }

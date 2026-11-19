@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Entrar — Catraca Inteligente</title>
+<meta name="description" content="Reserve salas e acompanhe a ocupação do prédio em tempo real." />
+<link rel="stylesheet" href="css/style.css" />
+<script src="js/theme.js"></script>
+<script src="js/guard.js" data-livre></script>
+<style>
+  body { min-height: 100vh; display: grid; place-items: center; padding: var(--s-5); }
+  .login { width: min(420px, 100%); margin: 0; padding: var(--s-6); }
+  .marca { font-family: var(--font-display); font-weight: 500; font-size: var(--t-label); color: var(--c-muted); margin: 0 0 var(--s-5); }
+  .login h1 { font-size: 28px; margin-bottom: var(--s-2); }
+  .login .sub { color: var(--c-muted); margin-bottom: var(--s-2); }
+  .erro { min-height: 1.4em; margin-top: var(--s-3); color: var(--c-err); font-size: var(--t-small); font-weight: 500; }
+</style>
+</head>
+<body>
+  <main class="card login">
+    <p class="marca">Catraca Inteligente</p>
+    <h1>Entrar no painel</h1>
+    <p class="sub">Entre com a conta do seu perfil (administrador, professor ou aluno). As contas são criadas no Firebase Auth.</p>
+
+    <form id="form" novalidate>
+      <label for="email">E-mail</label>
+      <input id="email" type="email" autocomplete="username" inputmode="email" required autofocus />
+      <label for="senha">Senha</label>
+      <input id="senha" type="password" autocomplete="current-password" required />
+      <button type="submit">Entrar</button>
+      <div class="erro" id="erro" role="alert"></div>
+    </form>
+  </main>
+
+  <script type="module">
+    import { entrar, pronto } from "./js/sessao.js";
+
+    const campo = (id) => document.getElementById(id);
+    const sessao = await pronto;
+    if (sessao) location.replace("index.html");   // já autenticado: vai direto ao menu
+
+    if (new URLSearchParams(location.search).get("erro") === "auth") {
+      campo("erro").textContent = "Não foi possível iniciar a autenticação. Tente recarregar a página.";
+    }
+
+    function falhar(texto) {
+      campo("erro").textContent = texto;
+      const f = campo("form"); f.classList.remove("tremer"); void f.offsetWidth; f.classList.add("tremer");
+    }
+
+    function mensagemDoErro(erro) {
+      if (!erro?.code) return erro?.message || "Não foi possível entrar. Tente novamente.";
+      const codigo = erro.code.replace("auth/", "");
+      if (["invalid-credential", "wrong-password", "user-not-found", "invalid-email"].includes(codigo)) {
+        return "E-mail ou senha incorretos.";
+      }
+      if (codigo === "too-many-requests") return "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
+      if (codigo === "user-disabled") return "Esta conta está desativada. Procure o administrador.";
+      if (codigo === "network-request-failed") return "Sem conexão com o Firebase. Verifique a internet.";
+      return "Não foi possível entrar. Tente novamente.";
+    }
+
+    campo("form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = campo("email").value.trim(), senha = campo("senha").value;
+      if (!email || !senha) return falhar("Informe e-mail e senha.");
+      const botao = campo("form").querySelector("button");
+      botao.disabled = true;
+      try {
+        await entrar(email, senha);
+        location.replace("index.html");
+      } catch (erro) {
+        console.error(erro);
+        falhar(mensagemDoErro(erro));
+        campo("senha").select();
+      } finally {
+        botao.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

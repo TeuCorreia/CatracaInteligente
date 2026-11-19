@@ -55,10 +55,12 @@ export async function matriculaExiste(matricula, ignorarId = null) {
 }
 
 function validarAluno(dados) {
-  if (!String(dados.nome ?? "").trim()) {
-    throw new Error("Preencha o nome do aluno.");
+  const nome = String(dados.nome ?? "").trim();
+  const matricula = String(dados.matricula ?? "").trim();
+  if (!nome || nome.length > 120) {
+    throw new Error("Informe o nome do aluno (até 120 caracteres).");
   }
-  if (!/^[0-9]+$/.test(String(dados.matricula ?? "").trim())) {
-    throw new Error("A matrícula deve conter apenas números.");
+  if (!/^[0-9]{1,20}$/.test(matricula)) {
+    throw new Error("A matrícula deve conter de 1 a 20 números.");
   }
 }

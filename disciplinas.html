@@ -17,7 +17,7 @@
       <h2 id="titulo-form">Nova disciplina</h2>
       <form id="form-disciplina">
         <label>Nome</label>
-        <input type="text" id="disc-nome" required />
+        <input type="text" id="disc-nome" required maxlength="120" />
 
         <label>Professor</label>
         <select id="disc-professor" required>
@@ -44,6 +44,7 @@
     import { criarDisciplina, escutarDisciplinas, atualizarDisciplina, removerDisciplina } from "./js/disciplinas.js";
     import { escutarProfessores } from "./js/professores.js";
     import { escutarAlunos } from "./js/alunos.js";
+    import { esc } from "./js/util.js";
 
     let discEmEdicao = null;
     let professoresCache = [];
@@ -90,8 +91,8 @@
         .map(
           (a) => `
         <label class="checkbox-linha">
-          <input type="checkbox" value="${a.id}" ${selecionados.includes(a.id) ? "checked" : ""} />
-          ${a.nome} — Matrícula ${a.matricula}
+          <input type="checkbox" value="${esc(a.id)}" ${selecionados.includes(a.id) ? "checked" : ""} />
+          ${esc(a.nome)} — Matrícula ${esc(a.matricula)}
         </label>`
         )
         .join("");
@@ -136,10 +137,10 @@
             .join(", ");
           return `
         <div class="lista-item">
-          <span>${d.nome} — Prof. ${prof ? prof.nome : "(não encontrado)"}<br>
-          <small>Alunos: ${nomesAlunos || "nenhum vinculado"}</small></span>
-          <button data-id="${d.id}" class="btn-editar">Editar</button>
-          <button data-id="${d.id}" class="btn-remover">Remover</button>
+          <span>${esc(d.nome)} — Prof. ${prof ? esc(prof.nome) : "(não encontrado)"}<br>
+          <small>Alunos: ${esc(nomesAlunos || "nenhum vinculado")}</small></span>
+          <button data-id="${esc(d.id)}" class="btn-editar">Editar</button>
+          <button data-id="${esc(d.id)}" class="btn-remover">Remover</button>
         </div>`;
         })
         .join("");

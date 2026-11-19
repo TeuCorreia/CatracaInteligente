@@ -35,10 +35,51 @@
       <div class="lista-item"><span>Cadastro de Disciplinas</span><a href="disciplinas.html">Abrir →</a></div>
     </div>
 
+<<<<<<< Updated upstream
     <div class="todo">
       TODO (Emerson / Mateus): esta página pode virar uma tela de login futuramente
       (professor x admin x totem), mas por enquanto serve só de menu de navegação.
     </div>
   </main>
+=======
+    <section data-papeis="aluno" aria-labelledby="t-aluno">
+      <h2 id="t-aluno">Minha rotina</h2>
+      <div class="grade">
+        <a class="cartao cartao--principal" href="minhas-aulas.html">
+          <b>Minhas aulas</b>
+          <span>Suas turmas, as aulas de hoje com a sala e as próximas da semana.</span>
+          <span class="ir">Ver minhas aulas</span>
+        </a>
+      </div>
+    </section>
+
+    <section data-papeis="admin" aria-labelledby="t-admin">
+      <h2 id="t-admin">Administração</h2>
+      <div class="grade">
+        <a class="cartao" href="admin-salas.html"><span class="etiqueta">Só administrador</span><b>Salas</b><span>Cadastre pela capacidade; número e andar são automáticos.</span><span class="ir">Abrir</span></a>
+        <a class="cartao" href="minhas-turmas.html"><span class="etiqueta">Só administrador</span><b>Conflitos de turma</b><span>Encontre choques de horário entre turmas e corrija na hora.</span><span class="ir">Abrir</span></a>
+        <a class="cartao" href="alunos.html"><span class="etiqueta">Só administrador</span><b>Alunos</b><span>Matrículas e situação, ativo ou inativo.</span><span class="ir">Abrir</span></a>
+        <a class="cartao" href="professores.html"><span class="etiqueta">Só administrador</span><b>Professores</b><span>Nome e e-mail dos docentes.</span><span class="ir">Abrir</span></a>
+        <a class="cartao" href="disciplinas.html"><span class="etiqueta">Só administrador</span><b>Disciplinas</b><span>Disciplinas, professores e alunos matriculados.</span><span class="ir">Abrir</span></a>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { Sessao, pronto } from "./js/sessao.js";
+
+    const s = await pronto;
+    if (s) {
+      document.getElementById("usuario-info").textContent = s.nome;
+      document.getElementById("perfil").textContent = { admin: "Perfil administrador", professor: "Perfil professor", aluno: "Perfil aluno" }[s.papel] ?? "";
+      document.getElementById("boas-vindas").textContent = `Olá, ${s.nome}. Escolha por onde começar.`;
+      document.querySelectorAll("[data-papeis]").forEach((el) => {
+        if (!Sessao.pode(el.dataset.papeis.split(","))) el.hidden = true;
+      });
+    }
+    document.getElementById("sair").addEventListener("click", () => Sessao.sair());
+    if (new URLSearchParams(location.search).has("negado")) document.getElementById("aviso-negado").hidden = false;
+  </script>
+>>>>>>> Stashed changes
 </body>
 </html>

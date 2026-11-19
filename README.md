@@ -139,3 +139,56 @@ Murilo (salas) → Davi (turmas usam salas) → Emerson (auth usa turmas) → Is
 Ou seja: dá pra todo mundo trabalhar em paralelo desde já, porque cada parte
 já tem uma versão "rascunho" funcionando (dados fake/manuais) — vocês vão
 substituindo aos poucos pela versão de verdade.
+<<<<<<< Updated upstream
+=======
+
+## Estrutura atual (login, salas automáticas e prédio 3D)
+
+**Segurança (Parte 1):** login com **Firebase Auth** e papel lido de `usuarios/{uid}`.
+Não existem mais senhas fixas, sessão em `sessionStorage` nem página `seed.html`.
+Você **precisa** aplicar as regras em `database.rules.json` no console do Firebase —
+o passo a passo está em [`docs/SEGURANCA.md`](docs/SEGURANCA.md).
+
+```
+login.html, index.html          → entrada e menu por perfil
+admin-salas.html                → cadastro de salas (só a capacidade; número/andar/módulo automáticos)
+planta3d.html                   → prédio 3D (por fora / translúcido / por andar) + reservas
+css/   style.css (base e temas), admin-salas.css, predio3d.css
+js/
+├── theme.js, util.js           → tema claro/escuro e utilitários
+├── sessao.js                   → sessão real (Firebase Auth + perfil no banco)
+├── guard.js                    → espera o Auth e bloqueia páginas por perfil
+├── salas.js, reservas.js       → salas (Firebase + numeração automática) e aulas reservadas
+├── admin-salas.js              → tela de cadastro de salas
+└── predio3d/                   → app (estado/interação), predio (geometria), cena, painel,
+                                  mobilia, pessoas, recursos (materiais e lotes), config
+database.rules.json             → regras do Realtime Database (colar no console)
+docs/SEGURANCA.md               → configuração de contas, perfis e regras
+```
+Numeração: cada andar comporta 10 salas (101–110, 201–210…); ao encher, nasce um andar novo.
+
+## Turmas, alunos e conflitos (base do reconhecimento facial com ESP32)
+
+**Logins:** contas criadas no Firebase Auth (e-mail + senha), com perfil em
+`usuarios/{uid}` (`admin`, `professor` ou `aluno`). Veja `docs/SEGURANCA.md`.
+
+**Modelo** (cada aluno ↔ turma ↔ aula):
+```
+alunos/{alunoId}                      = { nome, matricula, faceId, ativo }
+disciplinas/{discId}                  = { nome, professorId, alunoIds: [alunoId...] }   ← a TURMA (fonte da verdade)
+alunos_disciplinas/{alunoId}/{discId} = true                                             ← ÍNDICE derivado (para o ESP32)
+turmas/{turmaId}                      = { disciplinaId, salaId, data, horario, horarioFim, professorId, ... }   ← uma AULA marcada
+```
+- Quem **aloca** é o administrador: no prédio 3D ele escolhe a sala, o **professor**, a **turma dele** (ou "sem turma"), o assunto e o horário; os alunos da turma ficam ligados à aula. O professor só visualiza ("Suas aulas", ★ na sala, planta 2D).
+- **Conflitos** (`js/conflitos.js`): a reserva é recusada se o professor ou algum aluno da turma já tem outra aula no mesmo horário; a tela **Turmas e conflitos** (`minhas-turmas.html`) lista os choques e o admin corrige (mudar horário/sala ou liberar a aula).
+- O índice `alunos_disciplinas` é gravado junto com cada turma (`js/disciplinas.js`) e pode ser conferido/reconstruído em **Turmas e conflitos → Vínculos para a catraca**.
+
+**Como o ESP32 deve decidir a entrada** (mesma lógica de `aulaDoAlunoAgora` em `js/academico.js`, usada por `js/auth.js`):
+1. aluno reconhecido → `GET <DATABASE_URL>/alunos.json?orderBy="faceId"&equalTo="<faceId>"` (ou por `matricula`) → `alunoId`, `ativo`
+2. `GET <DATABASE_URL>/alunos_disciplinas/<alunoId>.json` → ids das turmas do aluno
+3. `GET <DATABASE_URL>/turmas.json?orderBy="data"&equalTo="AAAA-MM-DD"` → aulas de hoje; ficar com as de `disciplinaId` ∈ passo 2 e comparar `horario`/`horarioFim` com a hora atual (aceita-se chegar até 30 min antes)
+
+⚠️ Com as regras da Parte 1, essas URLs **sem token** são recusadas (`Permission denied`). O firmware precisa enviar um token do Firebase Auth ou, preferencialmente, chamar um backend/Cloud Function que decida a entrada com conta de serviço. Veja `docs/SEGURANCA.md`.
+
+As regras em `database.rules.json` já incluem os índices necessários (`.indexOn` em `alunos.matricula`, `alunos.faceId` e `turmas.data`). Não substitua o arquivo por um só com índices: isso reabriria o banco.
+>>>>>>> Stashed changes

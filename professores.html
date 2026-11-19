@@ -17,10 +17,10 @@
       <h2 id="titulo-form">Novo professor</h2>
       <form id="form-professor">
         <label>Nome</label>
-        <input type="text" id="prof-nome" required />
+        <input type="text" id="prof-nome" required maxlength="120" />
 
         <label>E-mail</label>
-        <input type="email" id="prof-email" required />
+        <input type="email" id="prof-email" required maxlength="254" />
 
         <button type="submit" id="btn-submit">Cadastrar professor</button>
         <button type="button" id="btn-cancelar" style="display:none;">Cancelar edição</button>
@@ -35,6 +35,11 @@
 
   <script type="module">
     import { criarProfessor, escutarProfessores, atualizarProfessor, removerProfessor } from "./js/professores.js";
+<<<<<<< Updated upstream
+=======
+    import { carregarModelos, iniciarCamera, pararCamera, capturarDescritor, temDescritor } from "./js/facial-recognition.js";
+    import { esc } from "./js/util.js";
+>>>>>>> Stashed changes
 
     let profEmEdicao = null;
 
@@ -78,9 +83,15 @@
         .map(
           (p) => `
         <div class="lista-item">
+<<<<<<< Updated upstream
           <span>${p.nome} — ${p.email}</span>
           <button data-id="${p.id}" class="btn-editar">Editar</button>
           <button data-id="${p.id}" class="btn-remover">Remover</button>
+=======
+          <span>${esc(p.nome)} — ${esc(p.email)}${temDescritor(p.faceDescriptor) ? " · Facial cadastrada" : ""}</span>
+          <button data-id="${esc(p.id)}" class="btn-editar">Editar</button>
+          <button data-id="${esc(p.id)}" class="btn-remover">Remover</button>
+>>>>>>> Stashed changes
         </div>`
         )
         .join("");

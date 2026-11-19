@@ -17,10 +17,10 @@
       <h2 id="titulo-form">Novo aluno</h2>
       <form id="form-aluno">
         <label>Nome</label>
-        <input type="text" id="aluno-nome" required />
+        <input type="text" id="aluno-nome" required maxlength="120" />
 
         <label>Matrícula</label>
-        <input type="text" id="aluno-matricula" required pattern="[0-9]+" inputmode="numeric" title="Digite apenas números." />
+        <input type="text" id="aluno-matricula" required pattern="[0-9]{1,20}" maxlength="20" inputmode="numeric" title="Digite apenas números." />
 
         <label class="checkbox-linha">
           <input type="checkbox" id="aluno-ativo" checked />
@@ -40,6 +40,11 @@
 
   <script type="module">
     import { criarAluno, escutarAlunos, atualizarAluno, removerAluno } from "./js/alunos.js";
+<<<<<<< Updated upstream
+=======
+    import { carregarModelos, iniciarCamera, pararCamera, capturarDescritor, temDescritor } from "./js/facial-recognition.js";
+    import { esc } from "./js/util.js";
+>>>>>>> Stashed changes
 
     let alunoEmEdicao = null;
 
@@ -85,9 +90,15 @@
         .map(
           (a) => `
         <div class="lista-item">
+<<<<<<< Updated upstream
           <span>${a.nome} — Matrícula ${a.matricula} (${a.ativo === false ? "INATIVO" : "ativo"})</span>
           <button data-id="${a.id}" class="btn-editar">Editar</button>
           <button data-id="${a.id}" class="btn-remover">Remover</button>
+=======
+          <span>${esc(a.nome)} — Matrícula ${esc(a.matricula)} (${a.ativo === false ? "INATIVO" : "ativo"})${temDescritor(a.faceDescriptor) ? " · Facial cadastrada" : ""}</span>
+          <button data-id="${esc(a.id)}" class="btn-editar">Editar</button>
+          <button data-id="${esc(a.id)}" class="btn-remover">Remover</button>
+>>>>>>> Stashed changes
         </div>`
         )
         .join("");

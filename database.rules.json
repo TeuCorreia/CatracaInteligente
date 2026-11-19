@@ -1,0 +1,80 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "usuarios": {
+      ".read": "auth != null && root.child('usuarios/' + auth.uid + '/papel').val() === 'admin'",
+      ".write": "auth != null && root.child('usuarios/' + auth.uid + '/papel').val() === 'admin'",
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('usuarios/' + auth.uid + '/papel').val() === 'admin')",
+        ".write": "auth != null && root.child('usuarios/' + auth.uid + '/papel').val() === 'admin'",
+        ".validate": "!newData.exists() || (newData.hasChildren(['papel', 'nome']) && newData.child('papel').isString() && (newData.child('papel').val() === 'admin' || newData.child('papel').val() === 'professor' || newData.child('papel').val() === 'aluno') && newData.child('nome').isString())"
+      }
+    },
+
+    "salas": {
+      ".read": "auth != null && root.child('usuarios/' + auth.uid + '/papel').exists()",
+      ".write": "auth != null && root.child('usuarios/' + auth.uid + '/papel').val() === 'admin'",
+      ".indexOn": ["numero", "andar"],
+      "$salaId": {
+        ".validate": "!newData.exists() || (newData.hasChildren(['numero', 'modulo', 'andar', 'capacidade']) && newData.child('capacidade').isNumber() && newData.child('capacidade').val() > 0)"
+      }
+    },
+
+    "alunos": {
+      ".read": "auth != null && root.child('usuarios/' + auth.uid + '/papel').exists()",
+      ".write": "auth != null && root.child('usuarios/' + auth.uid + '/papel').val() === 'admin'",
+      ".indexOn": ["matricula", "faceId"],
+      "$alunoId": {
+        ".validate": "!newData.exists() || newData.hasChildren(['nome', 'matricula'])"
+      }
+    },
+
+    "professores": {
+      ".read": "auth != null && root.child('usuarios/' + auth.uid + '/papel').exists()",
+      ".write": "auth != null && root.child('usuarios/' + auth.uid + '/papel').val() === 'admin'",
+      ".indexOn": ["email"],
+      "$professorId": {
+        ".validate": "!newData.exists() || newData.hasChildren(['nome', 'email'])"
+      }
+    },
+
+    "disciplinas": {
+      ".read": "auth != null && root.child('usuarios/' + auth.uid + '/papel').exists()",
+      ".write": "auth != null && root.child('usuarios/' + auth.uid + '/papel').val() === 'admin'",
+      ".indexOn": ["professorId"],
+      "$disciplinaId": {
+        ".validate": "!newData.exists() || newData.hasChildren(['nome', 'professorId'])"
+      }
+    },
+
+    "turmas": {
+      ".read": "auth != null && root.child('usuarios/' + auth.uid + '/papel').exists()",
+      ".write": "auth != null && root.child('usuarios/' + auth.uid + '/papel').val() === 'admin'",
+      ".indexOn": ["data"],
+      "$turmaId": {
+        ".validate": "!newData.exists() || newData.hasChildren(['salaId', 'data', 'horario'])"
+      }
+    },
+
+    "alunos_disciplinas": {
+      ".read": "auth != null && root.child('usuarios/' + auth.uid + '/papel').exists()",
+      ".write": "auth != null && root.child('usuarios/' + auth.uid + '/papel').val() === 'admin'",
+      "$alunoId": {
+        "$disciplinaId": {
+          ".validate": "!newData.exists() || newData.val() === true"
+        }
+      }
+    },
+
+    "logs_acesso": {
+      ".read": "auth != null && root.child('usuarios/' + auth.uid + '/papel').val() === 'admin'",
+      ".write": "auth != null && (root.child('usuarios/' + auth.uid + '/papel').val() === 'admin' || root.child('usuarios/' + auth.uid + '/papel').val() === 'professor')",
+      ".indexOn": ["timestamp"],
+      "$logId": {
+        ".validate": "!newData.exists() || (newData.hasChildren(['status', 'timestamp']) && (newData.child('status').val() === 'liberado' || newData.child('status').val() === 'negado'))"
+      }
+    }
+  }
+}
