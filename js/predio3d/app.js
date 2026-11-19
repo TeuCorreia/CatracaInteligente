@@ -78,6 +78,7 @@ function abrirFolha(aberta, titulo) {
   if (titulo) $("#alca-txt").textContent = titulo;
 }
 alca.addEventListener("click", () => abrirFolha(folha.classList.contains("recolhida")));
+if (!telaEstreita.matches) abrirFolha(true);   // computador: começa aberto (no celular começa recolhido)
 
 /** No celular a gaveta cobre o pé da tela e a barra cobre o topo: centraliza o prédio no espaço que sobra. */
 function ajustarVista() {
@@ -399,7 +400,8 @@ function fechar() {
   if (!estado.selecionada) return;
   estado.selecionada = null;
   atualizarSalas(); mostrarPainel(); vistaModo();
-  abrirFolha(false, "Encontrar sala");
+  // celular: a gaveta recolhe ao fechar a sala; computador: fica como o usuário deixou
+  abrirFolha(telaEstreita.matches ? false : !folha.classList.contains("recolhida"), "Encontrar sala");
 }
 addEventListener("keydown", (e) => {
   if (e.key === "Escape" && !/INPUT|TEXTAREA/.test(document.activeElement?.tagName)) fechar();
