@@ -36,6 +36,18 @@ export const mat = {
   planta: M(0x4aa35f, { flatShading: true }), livros: [0xc0392b, 0x2e86c1, 0xf1c40f, 0x27ae60].map((c) => M(c)),
   elev: M(0x55607a, { metalness: .4 }), elevLuz: M(0xaecbff, { emissive: 0x4a7dd8, emissiveIntensity: .4 }),
   oculto: new THREE.MeshBasicMaterial({ visible: false }),
+  // detalhes do prédio e do entorno (js/predio3d/detalhes.js)
+  brise: M(0xb57a48, { transparent: true, opacity: 1, roughness: .7 }),   // brises de madeira (some junto com a fachada)
+  luzTeto: M(0xffffff, { emissive: 0xfff4dd, emissiveIntensity: .25 }),  // luminárias (acendem à noite)
+  antena: M(0xff3b30, { emissive: 0xff2a1f, emissiveIntensity: .8 }),
+  catraca: M(0x2bd47d, { emissive: 0x19c46a, emissiveIntensity: .9 }),   // visor verde das catracas do portão
+  asfalto: M(0x3d424c, { roughness: 1 }), calcada: M(0xc3c8d1, { roughness: 1 }), faixaRua: M(0xf3f3f0, { roughness: .8 }),
+  vidroCarro: M(0x1c2636, { roughness: .2, metalness: .5 }), pneu: M(0x1b1c20, { roughness: .9 }),
+  lanterna: M(0xd8262f, { emissive: 0xff1f2a, emissiveIntensity: .4 }),
+  carros: [0xd64541, 0x2f6fd6, 0xf1f2f4, 0x2b2f38, 0xe8b931, 0x5f8f74].map((c) => M(c, { roughness: .35, metalness: .45 })),
+  terra: M(0x6b4a32, { roughness: 1 }),
+  flores: [0xe84a7a, 0xf6c544, 0xffffff, 0xff8a3d].map((c) => M(c, { roughness: .8, flatShading: true })),
+  nuvem: M(0xffffff, { roughness: 1, flatShading: true, fog: false }),
 };
 
 /** Piso da sala conforme o estado: 3 materiais para todas as salas. O brilho próprio evita que sombra/ACES "lavem" a cor. */
@@ -87,6 +99,18 @@ export const geo = {
   copaTopo: new THREE.SphereGeometry(.75, 6, 4).translate(.35, 3.0, .2),
   arbusto: new THREE.SphereGeometry(.55, 6, 4).scale(1, .7, 1).translate(0, .3, 0),
   folhagemVaso: new THREE.SphereGeometry(.38, 6, 4).translate(0, .85, 0),
+  // detalhes
+  roda: new THREE.CylinderGeometry(.2, .2, .14, 12).rotateZ(Math.PI / 2),
+  mastro: new THREE.CylinderGeometry(.04, .06, 4.6, 8).translate(0, 2.3, 0),
+  antena: new THREE.CylinderGeometry(.03, .06, 3, 6).translate(0, 1.5, 0),
+  bolinha: new THREE.SphereGeometry(.12, 8, 6),
+  canteiro: new THREE.CylinderGeometry(1.3, 1.35, .28, 18).translate(0, .14, 0),
+  terraCanteiro: new THREE.CylinderGeometry(1.18, 1.18, .3, 18).translate(0, .15, 0),
+  flor: new THREE.SphereGeometry(.14, 5, 3),
+  arco: new THREE.TorusGeometry(.32, .028, 6, 14, Math.PI).rotateY(Math.PI / 2),   // suporte de bicicleta (U invertido)
+  rodaBike: new THREE.TorusGeometry(.28, .025, 6, 16).rotateY(Math.PI / 2),
+  nuvem: new THREE.SphereGeometry(1, 7, 5),
+  lente: new THREE.CylinderGeometry(.07, .07, .12, 10).rotateX(Math.PI / 2),
 };
 
 // ---------- Lote: funde geometrias estáticas por material ----------

@@ -22,7 +22,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; font-family: var(--font-
 #cena { position: fixed; inset: 0; }
 #cena canvas { display: block; }
 #labels { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
-#topo, #painel, #legenda, #dica, #vazio, #toast { z-index: 5; }
+#topo, #folha, #legenda, #dica, #vazio, #toast { z-index: 5; }
 
 .glass {
   background: var(--glass); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow);
@@ -73,15 +73,55 @@ html, body { margin: 0; height: 100%; overflow: hidden; font-family: var(--font-
 .barra a.novo { background: var(--field); border: 1px solid var(--line); font-weight: 600; margin-left: 4px; }
 
 /* ---------- painel lateral ---------- */
-#painel { position: fixed; top: calc(var(--topo-h, 56px) + 28px); right: 14px; width: 350px; max-height: calc(100% - var(--topo-h, 56px) - 44px); overflow: auto; padding: 18px; }
+#folha { position: fixed; top: calc(var(--topo-h, 56px) + 28px); right: 14px; width: 350px; max-height: calc(100% - var(--topo-h, 56px) - 44px);
+         display: flex; flex-direction: column; overflow: hidden; }
+#painel { overflow: auto; padding: 18px; overscroll-behavior: contain; }
+/* computador: barra fina no topo do painel para recolher/abrir (libera a vista do prédio) */
+#alca { display: flex; align-items: center; gap: 8px; flex-shrink: 0; width: 100%; min-height: 42px; padding: 0 14px 0 18px;
+        border: 0; border-bottom: 1px solid var(--line); background: none; color: var(--muted); font: inherit; font-size: .8rem; cursor: pointer; text-align: left; }
+#alca:hover { color: var(--text); background: var(--field); }
+#alca b { flex: 1; font-weight: 500; }
+#alca .pega { display: none; }
+#alca .seta::before { content: "Recolher ▴"; }
+#folha.recolhida #alca { border-bottom: 0; color: var(--text); }
+#folha.recolhida #alca .seta::before { content: "Abrir ▾"; color: var(--accent); }
+#folha.recolhida #painel { display: none; }
+#folha { transition: max-height .3s var(--ease); }
+#folha.recolhida { max-height: 42px; }
 #legenda { position: fixed; left: 14px; bottom: 58px; padding: 8px 14px; font-size: .78rem; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; max-width: 60vw; }
 #legenda i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
 #dica { position: fixed; left: 14px; bottom: 14px; padding: 8px 14px; font-size: .78rem; color: var(--muted); }
+/* ---------- celular: barra compacta + gaveta inferior, o prédio fica com a maior parte da tela ---------- */
 @media (max-width: 800px) {
-  #topo { right: 14px; top: 56px; }
-  .marca .s { display: none; }
-  #painel { top: auto; bottom: 0; left: 0; right: 0; width: auto; max-height: 46%; border-radius: 18px 18px 0 0; }
+  #topo { top: 8px; left: 8px; right: 8px; gap: 6px; flex-direction: column; flex-wrap: nowrap; align-items: stretch; }   /* nowrap: com wrap a coluna cresce até a largura do conteúdo */
+  #topo > * { min-width: 0; }
+  .marca { margin-right: 64px; padding: 4px 12px 4px 4px; font-size: .92rem; justify-content: space-between; }   /* deixa espaço p/ o switch de tema */
+  .marca a { padding: 6px 10px; }
+  .marca .s, #usuario, .usuario .ponto { display: none; }
+  /* uma linha só, rolando para o lado (modos, data, horário) em vez de quebrar em 3 linhas */
+  .barra { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+  .barra::-webkit-scrollbar { display: none; }
+  #modos { flex-wrap: nowrap; }
+  .barra > *, #modos > * { flex-shrink: 0; white-space: nowrap; }
+  .barra button, .barra a { padding: 8px 11px; }
+  .campo-barra { font-size: 0; }                    /* esconde as palavras "Data"/"Horário": os campos já dizem */
+  .campo-barra input, .campo-barra button { font-size: .88rem; }
+
+  #folha { top: auto; bottom: 0; left: 0; right: 0; width: auto; max-height: min(55dvh, calc(100dvh - var(--topo-h, 110px) - 40px));
+           border-radius: 18px 18px 0 0; border-bottom: 0; padding-bottom: env(safe-area-inset-bottom);
+           transition: max-height .3s var(--ease); }
+  #folha.recolhida { max-height: calc(58px + env(safe-area-inset-bottom)); }
+  #folha.recolhida #painel { display: none; }
+  #alca { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; width: 100%; min-height: 58px;
+          padding: 8px 16px 10px; border: 0; background: none; color: var(--text); font: inherit; cursor: pointer; text-align: center; }
+  #alca:hover { background: none; }
+  #alca b { flex: none; }
+  #alca .seta { display: none; }
+  #alca .pega { display: block; width: 40px; height: 4px; border-radius: 2px; background: var(--muted); opacity: .5; }
+  #alca b { font-family: var(--font-display); font-weight: 500; font-size: .95rem; }
+  #painel { padding: 0 16px 16px; }
   #dica, #legenda { display: none; }
+  #toast { bottom: calc(72px + env(safe-area-inset-bottom)); max-width: calc(100vw - 32px); }
 }
 
 .cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
@@ -195,7 +235,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .sala2d small { font-size: .72rem; color: var(--muted); }
 .sala2d.sel { outline: 3px solid var(--st-sel); outline-offset: 2px; }
 .sala2d.apagada { opacity: .35; }
-@media (max-width: 800px) { #planta2d { right: 14px; bottom: 48%; } }
+@media (max-width: 800px) {
+  #planta2d { top: calc(var(--topo-h, 110px) + 16px); left: 8px; right: 8px; bottom: calc(66px + env(safe-area-inset-bottom)); padding: 12px; }
+  .grade2d { grid-template-columns: repeat(var(--cols), minmax(76px, 1fr)); }
+}
 
 /* ---------- movimento dos controles (mesmo do restante do site) ---------- */
 .primario, .barra button, .barra a, .resultado, .sala2d, .fechar, button.texto {

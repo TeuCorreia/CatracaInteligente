@@ -18,6 +18,7 @@ import { matStatus, COR_STATUS, mat, definirOpacidadeArestas } from "./recursos.
 import { criarPessoa, balancar } from "./pessoas.js";
 import { criarCena } from "./cena.js";
 import { criarPredio, descartarPredio } from "./predio.js";
+import { animarDetalhes } from "./detalhes.js";
 import { criarPainel } from "./painel.js";
 
 const $ = (seletor) => document.querySelector(seletor);
@@ -67,8 +68,27 @@ if (ehAdmin) $("#nova-sala").hidden = false;
 $("#usuario").textContent = sessao.nome ?? "";
 $("#sair").addEventListener("click", () => window.Sessao?.sair());
 
-// o painel começa logo abaixo da barra superior, qualquer que seja a altura dela (quebra de linha)
-new ResizeObserver(() => raiz.style.setProperty("--topo-h", `${$("#topo").offsetHeight}px`)).observe($("#topo"));
+// ---------- celular: gaveta inferior (recolhida / aberta) ----------
+const telaEstreita = matchMedia("(max-width: 800px)");
+const folha = $("#folha"), alca = $("#alca");
+/** Abre ou recolhe a gaveta (no computador a classe não tem efeito: o painel fica sempre aberto ao lado). */
+function abrirFolha(aberta, titulo) {
+  folha.classList.toggle("recolhida", !aberta);
+  alca.setAttribute("aria-expanded", String(aberta));
+  if (titulo) $("#alca-txt").textContent = titulo;
+}
+alca.addEventListener("click", () => abrirFolha(folha.classList.contains("recolhida")));
+if (!telaEstreita.matches) abrirFolha(true);   // computador: começa aberto (no celular começa recolhido)
+
+/** No celular a gaveta cobre o pé da tela e a barra cobre o topo: centraliza o prédio no espaço que sobra. */
+function ajustarVista() {
+  const topoH = $("#topo").offsetHeight;
+  raiz.style.setProperty("--topo-h", `${topoH}px`);   // o painel começa logo abaixo da barra superior, qualquer que seja a altura dela
+  cena.deslocarVista(telaEstreita.matches ? (folha.offsetHeight - topoH - 8) / 2 : 0);
+}
+new ResizeObserver(ajustarVista).observe($("#topo"));
+new ResizeObserver(ajustarVista).observe(folha);       // acompanha a gaveta abrindo/fechando
+telaEstreita.addEventListener("change", () => { ajustarVista(); atualizarSalas(); if (estado.pred && !estado.selecionada) vistaModo(); });
 
 /** Intervalo escolhido na barra ([ini, fim]) ou null = dia todo. */
 function intervalo() {
@@ -234,7 +254,8 @@ function atualizarSalas() {
       r.rotulo = html; r.div.innerHTML = html;
       r.div.setAttribute("aria-label", `Sala ${r.s.numero}, ${andarNome(r.s.andar)}, ${r.s.capacidade} lugares, ${STATUS[st].leitor}`);
     }
-    const mini = compacto && !sel && r.fl !== focoAndar;
+    // celular: só o número em todas (a sala escolhida mostra o rótulo completo); senão os rótulos se cobrem
+    const mini = !sel && (telaEstreita.matches || (compacto && r.fl !== focoAndar));
     const classe = `lbl ${st}${sel ? " sel" : ""}${r.minha ? " minha" : ""}${r.apagada ? " apagada" : ""}${mini ? " mini" : ""}`;
     if (r.classe !== classe) { r.classe = classe; r.div.className = classe; }
   }
@@ -273,6 +294,7 @@ $("#planta2d").addEventListener("click", (e) => {
 function escreverVisual() {
   mat.parede.opacity = visual.parede; mat.parede.depthWrite = visual.parede > .85;
   mat.fachada.opacity = visual.fach; mat.fachada.depthWrite = visual.fach > .85;
+  mat.brise.opacity = visual.fach; mat.brise.depthWrite = visual.fach > .85;   // brises somem junto com a fachada
   mat.vidro.opacity = visual.vidro;
   definirOpacidadeArestas(visual.aresta);
 }
@@ -328,7 +350,7 @@ function aplicarModo({ snap = false, reenquadrar = true } = {}) {
   });
 
   if (estado.selecionada && !fora && !planta && !pickAtivos.some((m) => m.userData.sala.s.id === estado.selecionada)) {
-    estado.selecionada = null; mostrarPainel();                  // a sala escolhida ficou fora do andar do corte
+    estado.selecionada = null; mostrarPainel(); abrirFolha(false, "Encontrar sala");   // a sala escolhida ficou fora do andar do corte
   }
   if (snap || reduzirMovimento) {
     Object.assign(visual, alvo); escreverVisual();
@@ -346,8 +368,11 @@ function irPara(pos, alvoCam, animar = true) {
 }
 controles.addEventListener("start", () => { rota = null; controles.autoRotate = false; });
 
+/** Tela em pé (celular): o campo de visão horizontal fica estreito, então a câmera recua para o prédio caber. */
+const recuo = () => Math.min(1.5, Math.max(1, 0.62 / camera.aspect));
+
 function vistaModo(animar = true) {
-  const { W, D, H } = estado.pred.medidas, d = Math.max(W, D * 1.2, H * 1.3, 14) * 1.5;   // a altura também conta (prédios altos)
+  const { W, D, H } = estado.pred.medidas, d = Math.max(W, D * 1.2, H * 1.3, 14) * 1.5 * recuo();   // a altura também conta (prédios altos)
   const corte = indiceCorte();
   if (corte !== null) { const y = corte * FH; return irPara([d * .35, y + d * .8, d * .72], [0, y, 0], animar); }
   const fora = estado.modo === "fora";
@@ -355,8 +380,8 @@ function vistaModo(animar = true) {
 }
 
 function focarSala(r) {
-  const c = r.centro;
-  irPara([c.x + 1.5, c.y + 6.5, c.z + 7.5], [c.x, c.y + .8, c.z]);
+  const c = r.centro, k = Math.sqrt(recuo());   // celular: um pouco mais longe para a sala inteira caber na largura
+  irPara([c.x + 1.5 * k, c.y + 6.5 * k, c.z + 7.5 * k], [c.x, c.y + .8, c.z]);
 }
 
 // ======================= SELEÇÃO E INTERAÇÃO =======================
@@ -368,12 +393,15 @@ function selecionar(r, destacar = false) {
   if (destacar && !reduzirMovimento) r.pulsoAte = performance.now() + 4500;
   controles.autoRotate = false;
   atualizarSalas(); mostrarPainel(); focarSala(r);
+  abrirFolha(true, `Sala ${r.s.numero}`);
 }
 
 function fechar() {
   if (!estado.selecionada) return;
   estado.selecionada = null;
   atualizarSalas(); mostrarPainel(); vistaModo();
+  // celular: a gaveta recolhe ao fechar a sala; computador: fica como o usuário deixou
+  abrirFolha(telaEstreita.matches ? false : !folha.classList.contains("recolhida"), "Encontrar sala");
 }
 addEventListener("keydown", (e) => {
   if (e.key === "Escape" && !/INPUT|TEXTAREA/.test(document.activeElement?.tagName)) fechar();
@@ -534,6 +562,7 @@ function animar() {
     }
 
     if (!reduzirMovimento) {
+      animarDetalhes(pred.animados, dt);          // carros na rua e nuvens
       for (const p of pred.andarilhos) {
         if (!p.fl.grp.visible) continue;
         p.x += p.dir * p.vel * dt;
