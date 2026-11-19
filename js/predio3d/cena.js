@@ -22,7 +22,8 @@ function texturaCeu(topo, base) {
 
 export function criarCena(contenedor, elementoRotulos) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  const toque = matchMedia("(pointer: coarse)").matches;   // celular/tablet: menos pixels e sombra menor (GPU fraca, bateria)
+  renderer.setPixelRatio(Math.min(devicePixelRatio, toque ? 1.5 : 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -41,7 +42,7 @@ export function criarCena(contenedor, elementoRotulos) {
   const sol = new THREE.DirectionalLight(0xfff3df, 2.1);
   sol.position.set(18, 30, 16);
   sol.castShadow = true;
-  sol.shadow.mapSize.set(2048, 2048);
+  sol.shadow.mapSize.setScalar(toque ? 1024 : 2048);
   Object.assign(sol.shadow.camera, { near: 1, far: 140 });
   sol.shadow.bias = -0.0004; sol.shadow.radius = 4;
   scene.add(hemi, sol, sol.target);
@@ -49,6 +50,14 @@ export function criarCena(contenedor, elementoRotulos) {
   const chao = new THREE.Mesh(new THREE.CircleGeometry(400, 90), new THREE.MeshStandardMaterial({ color: 0xcfe3cf, roughness: 1 }));
   chao.rotation.x = -Math.PI / 2; chao.position.y = -0.62; chao.receiveShadow = true;
   scene.add(chao);
+
+  // deslocamento vertical da imagem (setViewOffset): rótulos e cliques continuam certos, pois usam a mesma projeção
+  let desloc = 0, deslocAlvo = 0;
+  function aplicarDeslocamento() {
+    const w = innerWidth, h = innerHeight;
+    if (desloc) camera.setViewOffset(w, h, 0, desloc, w, h); else camera.clearViewOffset();
+    camera.updateProjectionMatrix();
+  }
 
   return {
     renderer, rotulos, scene, camera, controles,
@@ -84,9 +93,19 @@ export function criarCena(contenedor, elementoRotulos) {
     redimensionar() {
       const w = innerWidth, h = innerHeight;
       renderer.setSize(w, h); rotulos.setSize(w, h);
-      camera.aspect = w / h; camera.updateProjectionMatrix();
+      camera.aspect = w / h;
+      aplicarDeslocamento();
     },
 
-    desenhar() { controles.update(); renderer.render(scene, camera); rotulos.render(scene, camera); },
+    /** Sobe o centro da imagem `px` pixels (a gaveta do celular cobre a parte de baixo). Anima em desenhar(). */
+    deslocarVista(px) { deslocAlvo = Math.round(px); },
+
+    desenhar() {
+      if (desloc !== deslocAlvo) {
+        desloc = Math.abs(deslocAlvo - desloc) < 1 ? deslocAlvo : desloc + (deslocAlvo - desloc) * 0.18;
+        aplicarDeslocamento();
+      }
+      controles.update(); renderer.render(scene, camera); rotulos.render(scene, camera);
+    },
   };
 }

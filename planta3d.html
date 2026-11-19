@@ -22,7 +22,7 @@
     <div class="glass marca">
       <a href="index.html">← Menu</a>
       <div>Prédio 3D<span class="s" id="stats" role="status">carregando…</span></div>
-      <span class="usuario"><span id="usuario"></span> · <button type="button" id="sair" class="texto">Sair</button></span>
+      <span class="usuario"><span id="usuario"></span><span class="ponto"> · </span><button type="button" id="sair" class="texto">Sair</button></span>
     </div>
     <div class="glass barra">
       <span id="modos" role="group" aria-label="Modo de visualização"></span>
@@ -37,9 +37,19 @@
   </div>
 
   <section id="planta2d" class="glass" hidden aria-label="Planta 2D dos andares"></section>
-  <aside id="painel" class="glass" aria-label="Detalhes e reserva de sala"></aside>
+  <!-- no celular vira uma gaveta: recolhida mostra só a alça, aberta cobre parte da tela -->
+  <aside id="folha" class="glass recolhida" aria-label="Detalhes e reserva de sala">
+    <button type="button" id="alca" aria-expanded="false" aria-controls="painel">
+      <span class="pega" aria-hidden="true"></span><b id="alca-txt">Encontrar sala</b>
+    </button>
+    <div id="painel"></div>
+  </aside>
   <div id="legenda" class="glass"></div>
   <div id="dica" class="glass">Arraste: girar · Botão direito: mover · Scroll: zoom · Clique numa sala · Esc: fechar</div>
+  <script>
+    // tela de toque: dica com os gestos certos
+    if (matchMedia("(pointer: coarse)").matches) document.getElementById("dica").textContent = "Arraste: girar · Pinça: zoom · Dois dedos: mover · Toque numa sala";
+  </script>
   <div id="vazio" class="glass" hidden>
     <div class="grande">🏗️</div><h2>Nenhuma sala cadastrada</h2>
     <p class="sub" id="vazio-txt"></p><a id="vazio-link" href="admin-salas.html" hidden>Cadastrar primeira sala</a>
