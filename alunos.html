@@ -29,6 +29,15 @@
           Matrícula ativa
         </label>
 
+        <label>Cadastro facial (face-api.js)</label>
+        <video id="video-aluno" autoplay playsinline muted style="width:100%;max-width:320px;border-radius:12px;background:#111;display:block;margin:8px 0;"></video>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+          <button type="button" id="btn-camera-aluno">Iniciar câmera</button>
+          <button type="button" id="btn-capturar-aluno">Capturar rosto</button>
+          <button type="button" id="btn-limpar-face-aluno">Remover facial</button>
+        </div>
+        <p id="status-face-aluno">Nenhuma facial capturada (opcional, usada no check-in da catraca).</p>
+
         <button type="submit" id="btn-submit">Cadastrar aluno</button>
         <button type="button" id="btn-cancelar" style="display:none;">Cancelar edição</button>
       </form>
@@ -42,19 +51,68 @@
 
   <script type="module">
     import { criarAluno, escutarAlunos, atualizarAluno, removerAluno } from "./js/alunos.js";
+    import { carregarModelos, iniciarCamera, pararCamera, capturarDescritor, temDescritor } from "./js/facial-recognition.js";
 
     let alunoEmEdicao = null;
+    let descritorCapturado = null;
+    let descritorExistente = null;
+    const video = document.getElementById("video-aluno");
+    const statusFace = document.getElementById("status-face-aluno");
+
+    function atualizarStatusFace() {
+      if (descritorCapturado) statusFace.textContent = "Facial capturada e pronta para salvar.";
+      else if (descritorExistente) statusFace.textContent = "Facial já cadastrada (será mantida se você não capturar outra).";
+      else statusFace.textContent = "Nenhuma facial capturada (opcional, usada no check-in da catraca).";
+    }
 
     function limparEdicao() {
       alunoEmEdicao = null;
+      descritorCapturado = null;
+      descritorExistente = null;
+      pararCamera(video);
       document.getElementById("form-aluno").reset();
       document.getElementById("aluno-ativo").checked = true;
       document.getElementById("titulo-form").textContent = "Novo aluno";
       document.getElementById("btn-submit").textContent = "Cadastrar aluno";
       document.getElementById("btn-cancelar").style.display = "none";
+      atualizarStatusFace();
     }
 
     document.getElementById("btn-cancelar").addEventListener("click", limparEdicao);
+
+    document.getElementById("btn-camera-aluno").addEventListener("click", async () => {
+      try {
+        statusFace.textContent = "Carregando modelos e iniciando câmera...";
+        await carregarModelos();
+        await iniciarCamera(video);
+        statusFace.textContent = "Câmera ativa. Posicione o rosto e clique em “Capturar rosto”.";
+      } catch (erro) {
+        console.error(erro);
+        statusFace.textContent = "Erro ao iniciar câmera/modelos: " + erro.message;
+      }
+    });
+
+    document.getElementById("btn-capturar-aluno").addEventListener("click", async () => {
+      try {
+        statusFace.textContent = "Detectando rosto...";
+        const descritor = await capturarDescritor(video);
+        if (!descritor) {
+          statusFace.textContent = "Nenhum rosto detectado. Tente novamente com boa iluminação.";
+          return;
+        }
+        descritorCapturado = descritor;
+        atualizarStatusFace();
+      } catch (erro) {
+        console.error(erro);
+        statusFace.textContent = "Erro ao capturar facial: " + erro.message;
+      }
+    });
+
+    document.getElementById("btn-limpar-face-aluno").addEventListener("click", () => {
+      descritorCapturado = null;
+      descritorExistente = null;
+      atualizarStatusFace();
+    });
 
     document.getElementById("form-aluno").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -62,6 +120,7 @@
         nome: document.getElementById("aluno-nome").value,
         matricula: document.getElementById("aluno-matricula").value,
         ativo: document.getElementById("aluno-ativo").checked,
+        faceDescriptor: descritorCapturado ?? descritorExistente ?? null,
       };
       try {
         if (alunoEmEdicao) {
@@ -87,7 +146,7 @@
         .map(
           (a) => `
         <div class="lista-item">
-          <span>${a.nome} — Matrícula ${a.matricula} (${a.ativo === false ? "INATIVO" : "ativo"})</span>
+          <span>${a.nome} — Matrícula ${a.matricula} (${a.ativo === false ? "INATIVO" : "ativo"})${temDescritor(a.faceDescriptor) ? " · Facial cadastrada" : ""}</span>
           <button data-id="${a.id}" class="btn-editar">Editar</button>
           <button data-id="${a.id}" class="btn-remover">Remover</button>
         </div>`
@@ -99,6 +158,8 @@
           const aluno = alunos.find((a) => a.id === btn.dataset.id);
           if (!aluno) return;
           alunoEmEdicao = aluno.id;
+          descritorCapturado = null;
+          descritorExistente = temDescritor(aluno.faceDescriptor) ? aluno.faceDescriptor : null;
           document.getElementById("titulo-form").textContent = "Editando aluno";
           document.getElementById("aluno-nome").value = aluno.nome;
           document.getElementById("aluno-matricula").value = aluno.matricula;
@@ -106,6 +167,7 @@
           document.getElementById("btn-submit").textContent = "Salvar alterações";
           document.getElementById("btn-cancelar").style.display = "inline-block";
           document.getElementById("aluno-nome").focus();
+          atualizarStatusFace();
         });
       });
 
@@ -115,6 +177,8 @@
         });
       });
     });
+
+    window.addEventListener("beforeunload", () => pararCamera(video));
   </script>
 </body>
 </html>
