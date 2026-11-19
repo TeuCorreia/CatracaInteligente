@@ -1,0 +1,77 @@
+/* ============================================================
+   TOKENS DE DESIGN — fonte única para TODAS as páginas (inclusive o prédio 3D)
+   Paleta e tipografia sorteadas pela skill de design (software):
+     paleta "white-link-blue" (fundo branco, um único azul de ação) e
+     tipografia Sora (títulos) + Figtree (texto).
+   Regras do sistema: interface 90–95% neutra, UM azul de ação, sem violeta,
+   sem gradientes/sombras em botões, um raio por tipo de peça, escala de 4 px.
+   ============================================================ */
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400..600&family=Figtree:wght@400..600&display=swap");
+
+:root {
+  /* cor */
+  --c-bg: #ffffff;        /* fundo da página */
+  --c-surface: #f4f4f4;   /* cartões, campos, faixas */
+  --c-ink: #111111;       /* texto principal (contraste 18:1) */
+  --c-muted: #5f5f5f;     /* rótulos e meta (contraste 6.4:1) */
+  --c-line: rgba(17,17,17,.13);   /* filete de 1 px */
+  --c-action: #1a4be0;    /* único azul: botão principal, links, foco */
+  --c-action-hover: #1540c4;
+  --c-action-ink: #ffffff;
+  --c-ok: #157a3f; --c-err: #b8322d; --c-warn: #8a5a00;
+  --c-note: #fff6dc;      /* fundo de aviso */
+
+  /* tipografia */
+  --font-display: "Sora", system-ui, sans-serif;
+  --font-text: "Figtree", system-ui, sans-serif;
+  --t-h1: clamp(28px, 2.2vw + 16px, 40px);
+  --t-h2: 22px; --t-h3: 18px; --t-body: 16px; --t-small: 14px; --t-label: 13px;
+  --tracking-display: -0.035em;
+
+  /* espaçamento (escala de 4) */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px; --s-6: 32px; --s-7: 48px; --s-8: 64px;
+
+  /* raio ("soft"): controles 8, painéis 12, cartões 20 */
+  --r-sm: 8px; --r-md: 12px; --r-lg: 20px; --r-btn: 10px;
+
+  /* controles */
+  --h-ctrl: 44px;         /* altura mínima de botões/campos (alvo de toque) */
+  --dur: 160ms; --ease: cubic-bezier(.2,.7,.2,1);
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --c-bg: #0f1013;
+  --c-surface: #1b1c21;
+  --c-ink: #f2f2f2;
+  --c-muted: #a3a3a8;
+  --c-line: rgba(255,255,255,.14);
+  --c-action: #5a8bff;     /* azul mais claro no escuro: texto escuro por cima mantém contraste */
+  --c-action-hover: #7aa1ff;
+  --c-action-ink: #0b1020;
+  --c-ok: #4cc380; --c-err: #ff8a85; --c-warn: #f0c060;
+  --c-note: #2a2416;
+  color-scheme: dark;
+}
+
+/* comportamento comum: foco visível e movimento reduzido */
+:focus-visible { outline: 3px solid var(--c-action); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-delay: 0s !important; }
+}
+
+/* ---------- movimento: entradas ao CARREGAR a página (nunca ao rolar) ---------- */
+@keyframes subir { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes aparecer { from { opacity: 0; } to { opacity: 1; } }
+@keyframes tremer { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+
+header { animation: aparecer .4s var(--ease) backwards; }
+main > * { animation: subir .55s var(--ease) backwards; }
+main > :nth-child(2) { animation-delay: .06s; } main > :nth-child(3) { animation-delay: .12s; }
+main > :nth-child(4) { animation-delay: .18s; } main > :nth-child(5) { animation-delay: .24s; }
+main > :nth-child(n+6) { animation-delay: .3s; }
+.grade > * { animation: subir .5s var(--ease) backwards; }
+.grade > :nth-child(1) { animation-delay: .12s; } .grade > :nth-child(2) { animation-delay: .18s; }
+.grade > :nth-child(3) { animation-delay: .24s; } .grade > :nth-child(4) { animation-delay: .30s; }
+.tremer { animation: tremer .38s var(--ease); }

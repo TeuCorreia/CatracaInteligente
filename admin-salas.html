@@ -1,4 +1,3 @@
-<!-- SALAS - Admin-salas — responsável: Murilo -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -6,31 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Cadastro de Salas</title>
 <link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/admin-salas.css" />
+<script src="js/theme.js"></script>
+<script src="js/guard.js" data-papeis="admin"></script>
 </head>
 <body>
   <header>
     <h1>Cadastro de Salas</h1>
-    <nav><a href="index.html">← Voltar</a></nav>
+    <nav><a href="index.html">← Voltar</a> <a href="planta3d.html">Ver no prédio 3D</a></nav>
   </header>
 
   <main>
+    <div class="resumo">
+      <div><b id="r-salas">0</b><span>salas</span></div>
+      <div><b id="r-andares">0</b><span>andares</span></div>
+      <div><b id="r-prox">—</b><span>próxima sala</span></div>
+    </div>
+
+    <div class="aviso" id="aviso" hidden></div>
 
     <div class="card">
-      <h2>Nova sala</h2>
+      <h2 id="titulo-form">Nova sala</h2>
+      <p class="dica">
+        Informe só a capacidade. O número, o andar e o módulo são definidos automaticamente
+        e o prédio cresce conforme as salas são cadastradas.
+      </p>
       <form id="form-sala">
-        <label>Número da sala</label>
-        <input type="text" id="numero" required pattern="[0-9]+" inputmode="numeric" title="Digite apenas números."/>
+        <label for="capacidade">Capacidade (lugares)</label>
+        <input type="number" id="capacidade" required min="1" step="1" inputmode="numeric" placeholder="Ex: 40" />
 
-        <label>Módulo</label>
-        <input type="text" id="modulo" required/>
+        <div class="previa" id="previa"></div>
 
-        <label>Andar</label>
-        <input type="number" id="andar" required pattern="[0-9]+" inputmode="numeric" title="Digite apenas números."/>
-
-        <label>Capacidade</label>
-        <input type="number" id="capacidade" required pattern="[0-9]+" inputmode="numeric" title="Digte apenas números."/>
-
-        <button type="submit">Cadastrar sala</button>
+        <button type="submit" id="btn-salvar">Cadastrar sala</button>
+        <button type="button" id="btn-cancelar" class="secundario" hidden>Cancelar edição</button>
       </form>
     </div>
 
@@ -40,119 +47,6 @@
     </div>
   </main>
 
-  <script type="module">
-    import { criarSala, escutarSalas, removerSala, atualizarSala } from "./js/salas.js";
-    let salaEmEdicao = null;
-
-    document.getElementById("form-sala").addEventListener("submit", async (e) => {
-      // Na edição, quem salva é o outro listener (capture).
-      if (salaEmEdicao !== null) return;
-      e.preventDefault();
-      try {
-        await criarSala({
-          numero: document.getElementById("numero").value,
-          modulo: document.getElementById("modulo").value,
-          andar: document.getElementById("andar").value,
-          capacidade: document.getElementById("capacidade").value,
-        });
-        e.target.reset();
-      } catch (erro) {
-        alert(erro.message);
-      }
-    });
-
-    escutarSalas((salas) => {
-      const container = document.getElementById("lista-salas");
-      if (salas.length === 0) {
-        container.innerHTML = "<p>Nenhuma sala cadastrada ainda.</p>";
-        return;
-      }
-      container.innerHTML = salas
-        .map(
-          (s) => `
-        <div class="lista-item">
-          <span>Sala ${s.numero} — Módulo ${s.modulo}, ${s.andar}º andar (cap. ${s.capacidade})</span>
-          <button data-id="${s.id}" class="btn-editar">Editar</button>
-          <button data-id="${s.id}" class="btn-remover">Remover</button>
-        </div>`
-        )
-        .join("");
-        //botão editar
-        container.querySelectorAll(".btn-editar").forEach((btn) => {
-          btn.addEventListener("click", () => {
-            const sala = salas.find((s) => s.id === btn.dataset.id);
-
-            if (!sala) return;
-
-            salaEmEdicao = sala.id;
-
-            document.getElementById("form-sala")
-              .closest(".card")
-              .querySelector("h2")
-              .textContent = "Editando Sala";
-
-            document.getElementById("numero").value = sala.numero;
-            document.getElementById("modulo").value = sala.modulo;
-            document.getElementById("andar").value = sala.andar;
-            document.getElementById("capacidade").value = sala.capacidade;
-
-            document.querySelector('#form-sala button[type="submit"]').textContent =
-              "Salvar alterações";
-
-            document.getElementById("numero").focus();
-          });
-        });
-
-      //botão remover
-      container.querySelectorAll(".btn-remover").forEach((btn) => {
-        btn.addEventListener("click", () => removerSala(btn.dataset.id));
-      });
-    });
-
-    document.getElementById("form-sala").addEventListener(
-      "submit",
-      async (e) => {
-      // Fora da edição, mantém o cadastro original.
-      if (salaEmEdicao === null) return;
-
-      e.preventDefault();
-      e.stopImmediatePropagation();
-
-      const formulario = e.target;
-      const botao = formulario.querySelector('button[type="submit"]');
-
-      if (botao.disabled) return;
-
-      const dadosNovos = {
-        numero: document.getElementById("numero").value.trim(),
-        modulo: document.getElementById("modulo").value.trim(),
-        andar: Number(document.getElementById("andar").value),
-        capacidade: Number(document.getElementById("capacidade").value),
-      };
-
-      botao.disabled = true;
-
-      try {
-        await atualizarSala(salaEmEdicao, dadosNovos);
-
-        document.getElementById("form-sala")
-          .closest(".card")
-          .querySelector("h2")
-          .textContent = "Nova sala";
-
-        salaEmEdicao = null;
-        formulario.reset();
-        botao.textContent = "Cadastrar sala";
-
-        alert("Sala atualizada!");
-      } catch (erro) {
-        alert(erro.message);
-      } finally {
-        botao.disabled = false;
-      }
-    },
-    { capture: true }
-  );
-  </script>
+  <script type="module" src="js/admin-salas.js"></script>
 </body>
 </html>

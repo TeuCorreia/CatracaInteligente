@@ -1,132 +1,169 @@
 /* ============================================================
-   ESTILO BASE — compartilhado por todas as páginas
-   Mantém tudo visualmente parecido sem precisar de framework
+   ESTILO BASE — compartilhado por todas as páginas de formulário/cadastro
+   Usa os tokens de css/tokens.css (fonte única de cor, tipo, espaço e raio).
+   As classes antigas (header, .card, .lista-item, .todo, .btn-editar...) foram
+   mantidas para as páginas existentes continuarem funcionando sem alteração.
    ============================================================ */
+@import url("tokens.css");
+
+/* Nomes antigos → tokens (usados por admin-salas.css, index.html, login.html) */
+:root {
+  --bg: var(--c-bg); --text: var(--c-ink); --card: var(--c-surface); --card-shadow: none;
+  --header-bg: var(--c-bg); --header-text: var(--c-ink); --header-link: var(--c-muted);
+  --btn-bg: var(--c-action); --btn-hover: var(--c-action-hover); --btn-text: var(--c-action-ink);
+  --border: var(--c-line); --field-bg: var(--c-bg); --divider: var(--c-line); --muted: var(--c-muted);
+  --hover-row: color-mix(in srgb, var(--c-ink) 6%, transparent); --list-bg: var(--c-bg);
+  --ok: var(--c-ok); --err: var(--c-err); --todo-bg: var(--c-note); --todo-border: var(--c-warn);
+  --accent: var(--c-action);
+}
 
 * { box-sizing: border-box; }
 
 body {
-  font-family: system-ui, Arial, sans-serif;
-  background: #f4f6f8;
-  color: #1c1c1c;
   margin: 0;
-  padding: 0;
+  font-family: var(--font-text);
+  font-size: var(--t-body);
+  line-height: 1.55;
+  background: var(--c-bg);
+  color: var(--c-ink);
+  -webkit-font-smoothing: antialiased;
 }
 
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: var(--tracking-display);
+  line-height: 1.15;
+  margin: 0 0 var(--s-3);
+}
+h2 { font-size: var(--t-h2); }
+h3 { font-size: var(--t-h3); }
+p { margin: 0 0 var(--s-3); }
+
+a { color: var(--c-action); text-underline-offset: 3px; }
+.muted { color: var(--c-muted); }
+
+/* ---------- cabeçalho: opaco, com filete de 1 px; espaço à direita para o switch de tema ---------- */
 header {
-  background: #14213d;
-  color: #fff;
-  padding: 1rem 1.5rem;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: var(--s-2) var(--s-5);
+  min-height: 72px;
+  padding: var(--s-3) calc(var(--s-5) + 80px) var(--s-3) var(--s-5);
+  background: var(--c-bg);
+  color: var(--c-ink);
+  border-bottom: 1px solid var(--c-line);
 }
-
-header h1 { margin: 0; font-size: 1.2rem; }
+header h1 { font-size: 18px; margin: 0; }
+header nav { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-5); }
 header nav a {
-  color: #cfd8ea;
-  text-decoration: none;
-  margin-right: 1rem;
-  font-size: 0.9rem;
+  color: var(--c-ink); text-decoration: none; font-size: 15px; font-weight: 500;
+  padding: var(--s-2) 0;
+  /* sublinhado que "se desenha" no hover */
+  background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+  transition: background-size var(--dur) var(--ease);
 }
-header nav a:hover { color: #fff; }
+header nav a:hover { background-size: 100% 1px; }
 
-main {
-  max-width: 700px;
-  margin: 2rem auto;
-  padding: 0 1rem;
-}
+/* ---------- conteúdo ---------- */
+main { max-width: 760px; margin: var(--s-7) auto; padding: 0 var(--s-5); }
 
 .card {
-  background: #fff;
-  border-radius: 10px;
-  padding: 1.5rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  margin-bottom: 1.5rem;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  padding: var(--s-6);
+  margin-bottom: var(--s-5);
 }
+@media (max-width: 640px) { .card { padding: var(--s-5); } main { margin: var(--s-6) auto; } }
 
-label { display: block; margin-top: 0.8rem; font-size: 0.9rem; font-weight: 600; }
-input, select, button {
+/* ---------- formulários ---------- */
+label { display: block; margin: var(--s-4) 0 var(--s-2); font-size: var(--t-label); font-weight: 500; color: var(--c-muted); }
+input, select, textarea {
   width: 100%;
-  padding: 0.6rem;
-  margin-top: 0.3rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 1rem;
+  min-height: var(--h-ctrl);
+  padding: 0 var(--s-3);
+  font: inherit;
+  color: var(--c-ink);
+  background: var(--c-bg);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+  transition: border-color var(--dur) var(--ease);
 }
+textarea { padding: var(--s-3); min-height: 96px; resize: vertical; }
+input:hover, select:hover, textarea:hover { border-color: color-mix(in srgb, var(--c-ink) 35%, transparent); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--c-action); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-action) 22%, transparent); }
 
+/* ---------- botões: UM principal (azul cheio) e UM secundário (contorno) ---------- */
 button {
-  background: #14213d;
-  color: #fff;
-  border: none;
-  margin-top: 1.2rem;
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2);
+  width: 100%;
+  min-height: var(--h-ctrl);
+  margin-top: var(--s-5);
+  padding: 0 var(--s-5);
+  font: inherit; font-weight: 500;
+  color: var(--c-action-ink);
+  background: var(--c-action);
+  border: 1px solid transparent;
+  border-radius: var(--r-btn);
   cursor: pointer;
+  transition: background-color var(--dur) var(--ease), transform var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
-button:hover { background: #1f3565; }
+button:hover { background: var(--c-action-hover); transform: translateY(-1px); }
+button:active { transform: translateY(0) scale(.98); }
+button:disabled { opacity: .55; cursor: progress; transform: none; }
 
+/* secundário: cancelar, editar, remover e afins */
+.btn-editar, .btn-remover, #btn-cancelar, .secundario, .linha-btns button, .lista-item button {
+  color: var(--c-ink);
+  background: transparent;
+  border-color: var(--c-line);
+}
+.btn-editar:hover, .btn-remover:hover, #btn-cancelar:hover, .secundario:hover, .linha-btns button:hover, .lista-item button:hover {
+  background: var(--hover-row);
+  border-color: color-mix(in srgb, var(--c-ink) 35%, transparent);
+}
+
+/* ---------- listas ---------- */
 .lista-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #eee;
-  padding: 0.5rem 0;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: var(--s-2) var(--s-3);
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--c-line);
 }
+.lista-item > span:first-child { flex: 1 1 220px; }
+.lista-item button { width: auto; margin: 0; padding: 0 var(--s-4); }
+.btn-editar { margin-right: var(--s-2); }
 
-.status-ok { color: #1a7f37; font-weight: 700; }
-.status-negado { color: #c0392b; font-weight: 700; }
+.status-ok { color: var(--c-ok); font-weight: 600; }
+.status-negado { color: var(--c-err); font-weight: 600; }
 
+/* ---------- avisos internos (TODO do grupo) ---------- */
 .todo {
-  background: #fff3cd;
-  border-left: 4px solid #e6a700;
-  padding: 0.6rem 0.9rem;
-  font-size: 0.85rem;
-  margin: 1rem 0;
+  margin: var(--s-4) 0;
+  padding: var(--s-3) var(--s-4);
+  font-size: var(--t-small);
+  background: var(--c-note);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
 }
 
-.btn-editar {
-  margin-right: 8px;
-}
-
-/* Checkboxes — estilo consistente em todo o sistema */
+/* ---------- caixas de seleção ---------- */
 input[type="checkbox"] {
-  margin: 0;
-  padding: 0;
-  accent-color: #14213d;
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  flex-shrink: 0;
+  width: 18px; height: 18px; min-height: 0; margin: 0; padding: 0;
+  accent-color: var(--c-action); cursor: pointer; flex-shrink: 0;
 }
-
 .checkbox-linha {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 500;
-  font-size: 0.95rem;
-  padding: 0.35rem 0.25rem;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: background 0.15s;
+  display: flex; align-items: center; gap: var(--s-2);
+  min-height: var(--h-ctrl); padding: 0 var(--s-2);
+  font-size: 15px; font-weight: 500; color: var(--c-ink);
+  border-radius: var(--r-sm); cursor: pointer;
+  transition: background-color var(--dur) var(--ease);
 }
-
-.checkbox-linha:hover {
-  background: #eef2f9;
-}
-
+.checkbox-linha:hover { background: var(--hover-row); }
 .lista-checkboxes {
-  max-height: 200px;
-  overflow-y: auto;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 0.5rem 0.75rem;
-  margin-top: 0.3rem;
-  background: #fafbfc;
+  max-height: 220px; overflow-y: auto; margin-top: var(--s-1);
+  padding: var(--s-2); background: var(--c-bg);
+  border: 1px solid var(--c-line); border-radius: var(--r-md);
 }
-
-.lista-checkboxes .checkbox-linha {
-  margin-top: 0;
-}
-
-.lista-checkboxes p {
-  margin: 0.25rem 0;
-  color: #666;
-  font-size: 0.9rem;
-}
+.lista-checkboxes .checkbox-linha { margin-top: 0; }
+.lista-checkboxes p { margin: var(--s-1) 0; color: var(--c-muted); font-size: var(--t-small); }

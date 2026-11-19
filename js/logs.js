@@ -25,10 +25,13 @@ export function registrarLog({ alunoId = null, turmaId = null, status }) {
 // Chama o callback novamente quando a turma mudar; retorna a função para parar de escutar.
 export function escutarTurma(turmaId, callback, aoFalhar) {
   const turmaRef = ref(db, `turmas/${turmaId}`);
+  let cancelarSala = null;
 
-  return onValue(
+  const cancelarTurma = onValue(
     turmaRef,
     (snapshot) => {
+      if (typeof cancelarSala === "function") { cancelarSala(); cancelarSala = null; }
+
       if (!snapshot.exists()) {
         callback(null);
         return;
@@ -42,18 +45,27 @@ export function escutarTurma(turmaId, callback, aoFalhar) {
       }
 
       // Resolve os dados da sala (numero, modulo, andar) junto da turma
-      onValue(ref(db, `salas/${turma.salaId}`), (salaSnap) => {
-        const sala = salaSnap.val();
-        callback({
-          ...turma,
-          sala: sala ? sala.numero : "Não encontrada",
-          modulo: sala ? sala.modulo : "—",
-          andar: sala ? sala.andar : "—",
-        });
-      });
+      cancelarSala = onValue(
+        ref(db, `salas/${turma.salaId}`),
+        (salaSnap) => {
+          const sala = salaSnap.val();
+          callback({
+            ...turma,
+            sala: sala ? sala.numero : "Não encontrada",
+            modulo: sala ? sala.modulo : "—",
+            andar: sala ? sala.andar : "—",
+          });
+        },
+        aoFalhar
+      );
     },
     aoFalhar
   );
+
+  return () => {
+    if (typeof cancelarSala === "function") cancelarSala();
+    if (typeof cancelarTurma === "function") cancelarTurma();
+  };
 }
 
 // Opcional: acompanha os registros mais recentes, com o mais novo primeiro.

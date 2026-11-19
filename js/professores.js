@@ -5,9 +5,13 @@
 import { db } from "./firebase-config.js";
 import { ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-export function criarProfessor({ nome, email }) {
+export function criarProfessor({ nome, email, faceDescriptor = null }) {
   validarProfessor({ nome, email });
-  return push(ref(db, "professores"), { nome: nome.trim(), email: email.trim() });
+  return push(ref(db, "professores"), {
+    nome: nome.trim(),
+    email: email.trim(),
+    faceDescriptor: Array.isArray(faceDescriptor) ? faceDescriptor : null,
+  });
 }
 
 export function escutarProfessores(callback) {
@@ -19,10 +23,14 @@ export function escutarProfessores(callback) {
 
 export function atualizarProfessor(professorId, dadosNovos) {
   validarProfessor(dadosNovos);
-  return update(ref(db, `professores/${professorId}`), {
+  const payload = {
     nome: dadosNovos.nome.trim(),
     email: dadosNovos.email.trim(),
-  });
+  };
+  if (Object.prototype.hasOwnProperty.call(dadosNovos, "faceDescriptor")) {
+    payload.faceDescriptor = Array.isArray(dadosNovos.faceDescriptor) ? dadosNovos.faceDescriptor : null;
+  }
+  return update(ref(db, `professores/${professorId}`), payload);
 }
 
 export function removerProfessor(professorId) {

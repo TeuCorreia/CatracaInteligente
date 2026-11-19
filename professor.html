@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Área do Professor</title>
   <link rel="stylesheet" href="css/style.css" />
+<script src="js/theme.js"></script>
+<script src="js/guard.js" data-papeis="admin"></script>
 </head>
 <body>
   <header>
@@ -46,9 +48,11 @@
         <label for="data">Data</label>
         <input type="date" id="data" required />
 
-        <!-- HORÁRIO -->
-        <label for="horario">Horário</label>
-        <input type="time" id="horario" required />
+        <!-- HORÁRIO (início e fim: usados para recusar conflitos com outras aulas da sala) -->
+        <label for="horario">Início</label>
+        <input type="time" id="horario" required value="19:00" />
+        <label for="horario-fim">Fim</label>
+        <input type="time" id="horario-fim" required value="20:40" />
 
         <button type="submit">Confirmar alocação</button>
       </form>
@@ -59,17 +63,23 @@
     // ============================================================
     // IMPORTA AS FUNÇÕES
     // ============================================================
-    import { criarTurma } from "./js/turmas.js";
+    // A gravação usa a mesma regra do prédio 3D (js/reservas.js): recusa horários que se sobrepõem.
+    import { alocarTurma } from "./js/reservas.js";
     import { escutarSalas } from "./js/salas.js";
     import { escutarProfessores } from "./js/professores.js";
     import { escutarDisciplinas } from "./js/disciplinas.js";
+    import { hojeISO } from "./js/util.js";
 
-    // Data padrão: hoje
-    document.getElementById("data").valueAsDate = new Date();
+    // Data padrão: hoje (no fuso local)
+    document.getElementById("data").value = hojeISO();
 
     // Carregar professores e disciplinas
+    const sessao = window.Sessao?.obter() ?? {};
+    let disciplinasCache = [];
+
     escutarProfessores((professores) => {
       const select = document.getElementById("professorId");
+      const atual = select.value;
       select.innerHTML = professores.length
         ? ""
         : "<option value=''>Nenhum professor cadastrado (rode seed.html)</option>";
@@ -79,19 +89,31 @@
         option.textContent = p.nome;
         select.appendChild(option);
       });
+      if (atual) select.value = atual;
     });
 
-    escutarDisciplinas((disciplinas) => {
+    escutarDisciplinas((todas) => {
+      // professor logado (cadastrado): só as turmas dele; admin e demo: todas
+      const disciplinas = sessao.papel === "professor" ? todas.filter((d) => !!sessao.professorId && d.professorId === sessao.professorId) : todas;
+      disciplinasCache = disciplinas;
       const select = document.getElementById("disciplina");
+      const atual = select.value;
       select.innerHTML = disciplinas.length
         ? ""
         : "<option value=''>Nenhuma disciplina cadastrada (rode seed.html)</option>";
       disciplinas.forEach((d) => {
         const option = document.createElement("option");
-        option.value = d.nome;
-        option.textContent = d.nome;
+        option.value = d.id;                       // a turma (disciplina) é o vínculo com os alunos
+        option.textContent = `${d.nome} — ${(d.alunoIds || []).length} aluno(s)`;
         select.appendChild(option);
       });
+      if (atual) select.value = atual;
+    });
+
+    // escolher a turma seleciona o professor dela
+    document.getElementById("disciplina").addEventListener("change", (e) => {
+      const d = disciplinasCache.find((x) => x.id === e.target.value);
+      if (d?.professorId) document.getElementById("professorId").value = d.professorId;
     });
 
     // ============================================================
@@ -100,8 +122,6 @@
     escutarSalas((salas) => {
       const select = document.getElementById("salaId");
 
-      console.log("SALAS RECEBIDAS:", salas);
-
       if (salas.length === 0) {
         select.innerHTML = "<option value=''>Nenhuma sala cadastrada</option>";
         return;
@@ -109,7 +129,7 @@
 
       select.innerHTML = "";
 
-      salas.forEach((sala) => {
+      [...salas].sort((a, b) => Number(a.numero) - Number(b.numero)).forEach((sala) => {
         const option = document.createElement("option");
         option.value = sala.id;
         option.textContent = `Sala ${sala.numero} — Módulo ${sala.modulo}, ${sala.andar}º andar`;
@@ -123,18 +143,24 @@
     document.getElementById("form-turma").addEventListener("submit", async (e) => {
       e.preventDefault();
 
+      const professor = document.getElementById("professorId");
       try {
-        await criarTurma({
-          disciplina: document.getElementById("disciplina").value,
-          professorId: document.getElementById("professorId").value,
+        const turma = disciplinasCache.find((x) => x.id === document.getElementById("disciplina").value);
+        await alocarTurma({
+          disciplina: turma?.nome ?? "",
+          disciplinaId: turma?.id ?? null,
+          professorId: professor.value,
+          professorNome: professor.selectedOptions[0]?.textContent ?? "",
           salaId: document.getElementById("salaId").value,
           data: document.getElementById("data").value,
-          horario: document.getElementById("horario").value
+          ini: document.getElementById("horario").value,
+          fim: document.getElementById("horario-fim").value,
+          usuario: window.Sessao?.obter()?.usuario,
         });
 
         alert("Turma alocada com sucesso!");
         e.target.reset();
-        document.getElementById("data").valueAsDate = new Date();
+        document.getElementById("data").value = hojeISO();
       } catch (erro) {
         console.error(erro);
         alert("Erro ao alocar turma: " + erro.message);

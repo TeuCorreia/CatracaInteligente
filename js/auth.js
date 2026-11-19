@@ -1,13 +1,12 @@
 import { db } from "./firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { registrarLog } from "./logs.js";
+import { aulaDoAlunoAgora } from "./academico.js";
 
-function dataLocalHoje(data = new Date()) {
-  const ano = data.getFullYear();
-  const mes = String(data.getMonth() + 1).padStart(2, "0");
-  const dia = String(data.getDate()).padStart(2, "0");
-  return `${ano}-${mes}-${dia}`;
-}
+// Política da catraca: true = só entra quem tem aula hoje (turma correlacionada); false = qualquer aluno
+// ativo entra (a aula, se houver, é só exibida). Deixe false até os alunos estarem todos vinculados às
+// turmas; senão a catraca negaria quem ainda não foi cadastrado em uma disciplina.
+const EXIGIR_AULA = false;
 
 async function finalizarAcesso(alunoId, turmaId, autorizado, motivo, turma) {
   try {
@@ -59,28 +58,23 @@ export async function verificarAcesso(matricula) {
       return finalizarAcesso(alunoId, null, false, "Aluno inativo.");
     }
 
-    // Aluno ativo → acesso liberado. Tenta vincular a turma do dia para exibição,
-    // mas a presença de turma ativa NÃO bloqueia o acesso.
-    const hoje = dataLocalHoje(new Date());
-    const turmasSnapshot = await get(ref(db, "turmas"));
-    const turmas = [];
+    // Aluno ativo → procura a aula DELE pela correlação aluno → turma (disciplina) → aula de hoje
+    // (js/academico.js). É o mesmo caminho que o ESP32 seguirá depois do reconhecimento facial.
+    const achada = await aulaDoAlunoAgora(alunoId);
 
-    turmasSnapshot.forEach((item) => {
-      turmas.push({ ...item.val(), id: item.key });
-    });
-
-    const turma = turmas.find((t) => t.data === hoje) || turmas[0] || null;
-
-    if (turma) {
+    if (achada) {
+      const { turma, estado } = achada;
       turmaId = turma.id;
       let sala = null;
       if (turma.salaId) {
         const salaSnapshot = await get(ref(db, `salas/${turma.salaId}`));
         if (salaSnapshot.exists()) sala = salaSnapshot.val();
       }
-      return finalizarAcesso(alunoId, turmaId, true, null, { ...turma, sala });
+      return finalizarAcesso(alunoId, turmaId, true, null, { ...turma, sala, estadoAula: estado });
     }
 
+    // Sem aula hoje para este aluno. Com EXIGIR_AULA a catraca nega; sem, apenas libera sem turma.
+    if (EXIGIR_AULA) return finalizarAcesso(alunoId, null, false, "Sem aula hoje para este aluno.");
     return finalizarAcesso(alunoId, null, true, null, null);
   } catch (erro) {
     console.error("Erro ao verificar acesso:", erro);

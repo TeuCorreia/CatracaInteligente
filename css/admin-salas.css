@@ -1,0 +1,21 @@
+/* Cadastro de salas — complementa css/style.css */
+[hidden] { display: none !important; }
+
+.resumo { display: flex; gap: .8rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+.resumo div { flex: 1 1 120px; background: var(--card); border: 1px solid var(--divider); border-radius: var(--r-lg); padding: var(--s-4) var(--s-5); }
+.resumo b { display: block; font-family: var(--font-display); font-weight: 500; font-size: 28px; letter-spacing: -0.03em; }
+.resumo span { font-size: var(--t-label); color: var(--muted); }
+
+.previa { margin: var(--s-4) 0 0; padding: var(--s-4); border-radius: var(--r-md); background: var(--c-bg); border: 1px dashed var(--accent); }
+.previa b { font-size: 1.2rem; }
+.previa small { display: block; color: var(--muted); margin-top: .2rem; }
+
+.aviso { background: var(--todo-bg); border: 1px solid var(--c-line); padding: var(--s-4); border-radius: var(--r-md); margin-bottom: var(--s-5); }
+.aviso ul { margin: .4rem 0 0; padding-left: 1.2rem; }
+.aviso button { width: auto; margin-top: .6rem; padding: .5rem 1rem; }
+
+.andar-titulo { margin: var(--s-5) 0 var(--s-1); font-size: var(--t-label); font-weight: 500; color: var(--muted); }
+.dica { color: var(--muted); margin-top: 0; }
+.secundario { margin-top: var(--s-3); }
+.linha-btns { display: flex; gap: var(--s-2); }
+.linha-btns button { width: auto; margin: 0; padding: 0 var(--s-4); }

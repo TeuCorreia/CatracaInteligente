@@ -1,6 +1,7 @@
 // ============================================================
 // ALUNOS — cadastro, listagem, edição e remoção de alunos
 // ============================================================
+import { desvincularAluno } from "./academico.js";
 
 import { db } from "./firebase-config.js";
 import {
@@ -12,12 +13,13 @@ import {
   get,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-export function criarAluno({ nome, matricula }) {
+export function criarAluno({ nome, matricula, faceDescriptor = null }) {
   validarAluno({ nome, matricula });
   return push(ref(db, "alunos"), {
     nome: nome.trim(),
     matricula: String(matricula).trim(),
     faceId: null,
+    faceDescriptor: Array.isArray(faceDescriptor) ? faceDescriptor : null,
     ativo: true,
   });
 }
@@ -31,15 +33,20 @@ export function escutarAlunos(callback) {
 
 export function atualizarAluno(alunoId, dadosNovos) {
   validarAluno(dadosNovos);
-  return update(ref(db, `alunos/${alunoId}`), {
+  const payload = {
     nome: dadosNovos.nome.trim(),
     matricula: String(dadosNovos.matricula).trim(),
     ativo: Boolean(dadosNovos.ativo),
-  });
+  };
+  if (Object.prototype.hasOwnProperty.call(dadosNovos, "faceDescriptor")) {
+    payload.faceDescriptor = Array.isArray(dadosNovos.faceDescriptor) ? dadosNovos.faceDescriptor : null;
+  }
+  return update(ref(db, `alunos/${alunoId}`), payload);
 }
 
-export function removerAluno(alunoId) {
-  return remove(ref(db, `alunos/${alunoId}`));
+export async function removerAluno(alunoId) {
+  await remove(ref(db, `alunos/${alunoId}`));
+  await desvincularAluno(alunoId);   // tira o aluno das turmas e do índice (evita matrícula "fantasma")
 }
 
 export async function matriculaExiste(matricula, ignorarId = null) {

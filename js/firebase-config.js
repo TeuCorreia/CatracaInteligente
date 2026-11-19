@@ -6,6 +6,8 @@ import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.2/firebase
 const firebaseConfig = {
   apiKey: "AIzaSyBYcX_RDv_KXVUhnlZ2pDz-f7cPE4pAkzo",
   authDomain: "catraca-inteligente-b90fe.firebaseapp.com",
+  // URL do Realtime Database (ajuste no Console do Firebase se o seu banco usar outra região/URL)
+  databaseURL: "https://catraca-inteligente-b90fe-default-rtdb.firebaseio.com",
   projectId: "catraca-inteligente-b90fe",
   storageBucket: "catraca-inteligente-b90fe.firebasestorage.app",
   messagingSenderId: "985826306190",
@@ -21,9 +23,10 @@ export const db = getDatabase(app);
 // ESTRUTURA DO BANCO (combinada pelo grupo — não mudar sem avisar todo mundo)
 // ------------------------------------------------------------
 // salas/            { salaId: { numero, modulo, andar, capacidade, disponivel } }
-// alunos/           { alunoId: { nome, matricula, faceId, ativo } }
-// professores/      { professorId: { nome, email } }
-// disciplinas/      { disciplinaId: { nome, professorId } }
-// turmas/           { turmaId: { disciplinaId, professorId, salaId, data, horario } }
+// alunos/           { alunoId: { nome, matricula, faceId, faceDescriptor, ativo } }
+// professores/      { professorId: { nome, email, faceDescriptor } }
+// disciplinas/      { disciplinaId: { nome, professorId, alunoIds } }
+// turmas/           { turmaId: { disciplinaId, professorId, professorNome, salaId, data, horario, horarioFim, disciplina/curso, assunto, criadoPor } }
+// alunos_disciplinas/{ alunoId: { disciplinaId: true } }
 // logs_acesso/      { logId: { alunoId, turmaId, timestamp, status } }
 // ------------------------------------------------------------

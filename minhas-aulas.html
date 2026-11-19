@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Minhas aulas — Catraca Inteligente</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/turmas.css" />
+<script src="js/theme.js"></script>
+<script src="js/guard.js" data-papeis="aluno,admin"></script>
+</head>
+<body>
+  <header>
+    <h1>Minhas aulas</h1>
+    <nav><a href="index.html">← Voltar</a></nav>
+  </header>
+
+  <main class="larga">
+    <div class="resumo" id="resumo" aria-live="polite"></div>
+
+    <div class="card" id="hoje-card">
+      <h2>Hoje</h2>
+      <div id="hoje">Carregando...</div>
+    </div>
+
+    <div class="card">
+      <h2>Minhas turmas</h2>
+      <div id="turmas">Carregando...</div>
+    </div>
+
+    <div class="card" id="conflitos-card" hidden>
+      <h2>Choques de horário</h2>
+      <p class="dica">Duas aulas suas marcadas ao mesmo tempo. Procure a coordenação do curso.</p>
+      <div id="conflitos"></div>
+    </div>
+  </main>
+
+  <script type="module" src="js/minhas-aulas.js"></script>
+</body>
+</html>

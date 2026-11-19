@@ -1,0 +1,57 @@
+/* Minhas turmas / Minhas aulas — complementa css/style.css e css/tokens.css */
+[hidden] { display: none !important; }
+main.larga { max-width: 960px; }
+
+.resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--s-4); margin-bottom: var(--s-6); }
+.resumo div { background: var(--c-surface); border: 1px solid var(--c-line); border-radius: var(--r-lg); padding: var(--s-4) var(--s-5); }
+.resumo b { display: block; font-family: var(--font-display); font-weight: 500; font-size: 28px; letter-spacing: -0.03em; }
+.resumo span { font-size: var(--t-label); color: var(--c-muted); }
+.resumo .alerta b { color: var(--c-err); }
+
+.filtro { display: flex; flex-wrap: wrap; align-items: end; gap: var(--s-4); margin-bottom: var(--s-5); }
+.filtro > div { flex: 1 1 240px; }
+.filtro label { margin-top: 0; }
+
+.conflito { padding: var(--s-4); margin-top: var(--s-3); border: 1px solid var(--c-line); border-left: 4px solid var(--c-err); border-radius: var(--r-md); background: var(--c-bg); }
+.conflito b { display: block; margin-bottom: var(--s-1); }
+.conflito small { display: block; color: var(--c-muted); }
+.vazio { color: var(--c-muted); margin: 0; }
+.ok { color: var(--c-ok); font-weight: 500; }
+
+.turma { padding: var(--s-5) 0; border-bottom: 1px solid var(--c-line); }
+.turma:last-child { border-bottom: 0; padding-bottom: 0; }
+.turma h3 { margin: 0 0 var(--s-1); }
+.turma .meta { color: var(--c-muted); font-size: var(--t-small); margin: 0 0 var(--s-3); }
+.aulas { display: grid; gap: var(--s-2); margin: 0 0 var(--s-3); padding: 0; list-style: none; }
+.aulas li { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); font-size: var(--t-small); }
+.aulas .quando { font-weight: 500; min-width: 150px; }
+.aulas .hoje { color: var(--c-action); }
+
+.selo { display: inline-block; padding: 2px 10px; font-size: var(--t-label); font-weight: 500; border-radius: 999px; border: 1px solid var(--c-line); color: var(--c-muted); }
+.selo.perigo { color: var(--c-err); border-color: var(--c-err); }
+.selo.destaque { color: var(--c-action); border-color: var(--c-action); }
+
+details.alunos { margin-top: var(--s-2); }
+details.alunos summary { cursor: pointer; color: var(--c-action); font-weight: 500; min-height: 32px; }
+.tabela { width: 100%; margin-top: var(--s-2); border-collapse: collapse; font-size: var(--t-small); }
+.tabela th, .tabela td { text-align: left; padding: var(--s-2) var(--s-3); border-bottom: 1px solid var(--c-line); }
+.tabela th { color: var(--c-muted); font-weight: 500; font-size: var(--t-label); }
+.vinculos { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-4); }
+.vinculos button { width: auto; margin: 0; }
+.dica { color: var(--c-muted); font-size: var(--t-small); }
+
+/* ---------- correcao de conflitos (admin) ---------- */
+.corrigir { display: grid; gap: var(--s-3); margin-top: var(--s-3); padding-top: var(--s-3); border-top: 1px dashed var(--c-line); }
+.acao { display: grid; gap: var(--s-2); }
+.acao-nome { font-size: var(--t-small); }
+.acao-botoes { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+button.mini { width: auto; margin: 0; min-height: 36px; padding: 0 var(--s-4); font-size: var(--t-small); color: var(--c-ink); background: transparent; border-color: var(--c-line); }
+button.mini:hover { background: var(--hover-row); }
+button.mini.perigo { color: var(--c-err); }
+button.mini[data-confirmar="1"] { color: var(--c-action-ink); background: var(--c-err); border-color: var(--c-err); }
+button.mini[type=submit] { color: var(--c-action-ink); background: var(--c-action); }
+.edicao { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--s-3); align-items: end; padding: var(--s-4); background: var(--c-surface); border: 1px solid var(--c-line); border-radius: var(--r-md); }
+.edicao label { margin: 0; }
+.edicao .previa { grid-column: 1 / -1; margin: 0; font-size: var(--t-small); }
+.edicao .previa.erro { color: var(--c-err); } .edicao .previa.ok { color: var(--c-ok); }
+.edicao button[type=submit] { grid-column: 1 / -1; justify-self: start; }

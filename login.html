@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Entrar — Catraca Inteligente</title>
+<meta name="description" content="Reserve salas e acompanhe a ocupação do prédio em tempo real." />
+<link rel="stylesheet" href="css/style.css" />
+<script src="js/theme.js"></script>
+<script src="js/guard.js" data-livre></script>
+<style>
+  body { min-height: 100vh; display: grid; place-items: center; padding: var(--s-5); }
+  .login { width: min(420px, 100%); margin: 0; padding: var(--s-6); }
+  .marca { font-family: var(--font-display); font-weight: 500; font-size: var(--t-label); color: var(--c-muted); margin: 0 0 var(--s-5); }
+  .login h1 { font-size: 28px; margin-bottom: var(--s-2); }
+  .login .sub { color: var(--c-muted); margin-bottom: var(--s-2); }
+  .erro { min-height: 1.4em; margin-top: var(--s-3); color: var(--c-err); font-size: var(--t-small); font-weight: 500; }
+</style>
+</head>
+<body>
+  <main class="card login">
+    <p class="marca">Catraca Inteligente</p>
+    <h1>Entrar no painel</h1>
+    <p class="sub">Administrador, professor ou aluno: entre com seu usuário, e-mail ou matrícula.</p>
+
+    <form id="form" novalidate>
+      <label for="usuario">Usuário, matrícula ou e-mail</label>
+      <input id="usuario" autocomplete="username" required autofocus />
+      <label for="senha">Senha</label>
+      <input id="senha" type="password" autocomplete="current-password" required />
+      <button type="submit">Entrar</button>
+      <div class="erro" id="erro" role="alert"></div>
+    </form>
+  </main>
+
+  <script type="module">
+    import { entrarPeloCadastro, professorIdPorNome } from "./js/identidade.js";
+
+    const campo = (id) => document.getElementById(id);
+    if (Sessao.obter()) location.replace("index.html");   // já logado: vai direto ao menu
+
+    function falhar(texto) {
+      campo("erro").textContent = texto;
+      const f = campo("form"); f.classList.remove("tremer"); void f.offsetWidth; f.classList.add("tremer");   // reinicia a animação
+    }
+
+    campo("form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const usuario = campo("usuario").value, senha = campo("senha").value, botao = campo("form").querySelector("button");
+      if (!usuario.trim() || !senha) return falhar("Informe usuário e senha.");
+      botao.disabled = true;
+      try {
+        // 1) contas fixas de demonstração (admin / professor)  2) aluno (matrícula) ou professor (e-mail) cadastrados
+        const demo = Sessao.entrar(usuario, senha);
+        if (demo) {
+          // conta demo de professor: liga ao cadastro pelo nome, senão ela não enxerga turma nenhuma
+          if (demo.papel === "professor" && !demo.professorId) {
+            const professorId = await professorIdPorNome(demo.nome).catch(() => null);
+            if (professorId) Sessao.definir({ ...demo, professorId });
+          }
+          return location.replace("index.html");
+        }
+        const r = await entrarPeloCadastro(usuario, senha);
+        if (r?.sessao) { Sessao.definir(r.sessao); return location.replace("index.html"); }
+        falhar(r?.erro ?? "Usuário ou senha incorretos."); campo("senha").select();
+      } catch (erro) {
+        console.error(erro); falhar("Não foi possível consultar o cadastro. Tente de novo.");
+      } finally { botao.disabled = false; }
+    });
+  </script>
+</body>
+</html>
